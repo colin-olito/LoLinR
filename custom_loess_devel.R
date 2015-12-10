@@ -13,16 +13,22 @@
 ###################################
 #  Step 1: OLS & WLS Regression machinery #
 #
-#  Notes: I'm stripping code from an old
-#  stats class here so I can keep the
-#  memory usage for the regression fits
-#  to a minimum.
+#  Notes: -- I'm stripping code from an old stats class here so I can minimize memory
+#             usage for the regression fits
+#
+#           -- I have a couple test data sets here to test out the behaviour of the function:
+#
+#                taxes.csv - some random data from my old stats course, useful b/c it is nonlinear
+#
+#                TestO2data.csv - some O2 consumption data for urchins  I have from last year
 ###################################
 
 # Import test data #
 
 data=read.csv("taxes.csv",header=TRUE)
+head(data)
 data=data.frame(cbind(data$price, data$tax))
+names(data) <- c("price","tax")
 data=na.omit(data)
 length(data[,1])  #should equal 107
 is(data)
@@ -34,7 +40,7 @@ str(data)
 
 y=data$tax
 X=matrix(,nrow=length(y),ncol=2)
-X[,1]=d
+X[,1]=1
 X[,2]=data$price
 head(X)
 
@@ -203,12 +209,12 @@ res
 #             -- skewness of residuals
 ###################################
 str(data)
-xall <- as.vector(sort(as.numeric(as.character(data$X1))))
-yall <- as.vector(sort(as.numeric(as.character(data$X2))))
-length(x1)
-length(y1)
-is(x1)
-is(y1)
+xall <- as.vector(sort(as.numeric(as.character(data$price))))
+yall <- as.vector(sort(as.numeric(as.character(data$tax))))
+length(xall)
+length(yall)
+is(xall)
+is(yall)
 
 alpha=0.2
 yall <- data$A
@@ -574,7 +580,7 @@ if(plots==TRUE) {
 
 pdf(file="testplots.pdf", height=15, width=15)
 par(mfrow=c(5,5))
-
+y
 for(i in 1:nrow(res)) {
 ytemp <- yall[c((res$i[i]-res$h[i]) : (res$i[i]+res$h[i]))]
 xtemp <- xall[c((res$i[i]-res$h[i]) : (res$i[i]+res$h[i]))]
