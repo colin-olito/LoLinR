@@ -28,6 +28,7 @@ TriCube<-function(x, h) {
 # Coefficient for a given vector of numbers. This function is a dependency for
 # FindLocLin(), and is used to calculate the skewness of standardized residuals.
 
+# Note: Compare to moments package
 Skew <- function(x){
     n <- length(x)
     (n/((n-1)*(n-2))) * sum(((x-mean(x))/sd(x))^3)
