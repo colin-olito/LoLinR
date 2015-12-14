@@ -30,12 +30,25 @@ TriCube<-function(x, h) {
 
 Skew <- function(x){
     n <- length(x)
-    G <- (n/((n-1)*(n-2))) * sum(((x-mean(x))/sd(x))^3)
-    return(G)
+    (n/((n-1)*(n-2))) * sum(((x-mean(x))/sd(x))^3)
 }
 
 
 
+################################################################
+#  Dependency -- LinReg():
+#
+# LinReg() is a wrapper for a function to fit a simple linear regression using either
+# weighted or unweighted least squares. The function uses matrix notation to minimize
+# memory usage relative to fitting any of the Base linear model functions in R. This
+# function will consist of the 'guts' of the Fit Block... I imagine that much of the
+# flexibility in the FindLocLin() function will come from minor modifications to this
+# bit of code.
+
+LinReg <- function(x, y, weights = TRUE){
+
+...
+}
 
 ################################################################
 #  Function FindLocLin():
@@ -69,7 +82,7 @@ Skew <- function(x){
 # to standardize estimates of an organism's resting  metabolic rate from
 # oxygen consumption data. O2 consumption data typically depict a initial
 # period of noise, followed by a relatively linear decline, which gradually
-# accelerates as the animal becomes stressed. Point estimates of resting
+# decelerates as the animal becomes stressed. Point estimates of resting
 # metabolic rate aim to find the 'sweet spot' of linear O2 decline.
 # Standard LOESS procedures aren't particularly useful for this purpose
 # because they emphasise data visualization and interpolation from the
