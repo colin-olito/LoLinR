@@ -299,37 +299,3 @@ abline(coef=c(LocFit$b.hat[1],LocFit$b.hat[2]), col=1)
 
     
 }  #END OF FUNCTION
-
-
-
-
-
-
-
-
-
-###################################################
-#  Examples:
-###################################################
-
-# Colin's local data folder
-data <- read.csv("~/Documents/Projects/PhD/local-lin/data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE)
-
-y=data$D; x=data$time;
-
-
-
-data <- read.csv("TestO2data.csv", header=TRUE, stringsAsFactors=FALSE)
-head(data)
-nrow(data)
-
-results <- FindLocLin(yall=data$D, xall=data$time, alpha=0.2, weights=TRUE, plots=FALSE)
-results
-PlotBest(res=results, best=1, yall=data$D, xall=data$time)
-
-
-
-
-
-
-
