@@ -46,19 +46,15 @@ Skew  <-  function(x) {
 # flexibility in the FindLocLin() function will come from minor modifications to this
 # bit of code.
 
-LocReg  <-  function(x, y, h, weights = TRUE) {
+LocReg  <-  function(x, y, h, weights=TRUE, verbose=TRUE) {
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
     
-    if(!weights) { # Use Ordinary Least Squares Regression #
-        # Fit Model #
-        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
-        yHat        <-  X %*% bHat
-        hatMat      <-  X %*% (solve(t(X) %*% X)) %*% t(X) %*% y
-        sigmaHat    <-  sum((y - (X %*% bHat))^2) / length(y)
-        sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
-        stdResid    <-  (y - yHat) / sqrt(yHat)
-    } else { # Use Weighted Least Squares Regression #
+    if(verbose) {
+        cat(h, ' ', weights, '\n')
+    }
+    
+    if(weights) { # Use Ordinary Least Squares Regression #
         # Calculate weights #
         w  <-  TriCube(x=x, h=h)
         # Fit Model #
@@ -68,10 +64,18 @@ LocReg  <-  function(x, y, h, weights = TRUE) {
         sigmaHat    <-  sum((y - (X %*% bHat))^2)/length(y)
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(yHat)
+    } else { # Use Weighted Least Squares Regression #
+        # Fit Model #
+        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
+        yHat        <-  X %*% bHat
+        hatMat      <-  X %*% (solve(t(X) %*% X)) %*% t(X) %*% y
+        sigmaHat    <-  sum((y - (X %*% bHat))^2) / length(y)
+        sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
+        stdResid    <-  (y - yHat) / sqrt(yHat)
     }
     
     ##  Output results  ##
-    list('bHat'       = as.vector(bHat),
+    list('bHat'        = as.vector(bHat),
          'yHat'        = as.vector(yHat),
          'hatMat'      = as.vector(hatMat),
          'sigmaHat'    = as.vector(sigmaHat),
@@ -136,65 +140,51 @@ LocReg  <-  function(x, y, h, weights = TRUE) {
 # metrics, and returns the 25 'best' local linear regressions, as well as
 # plots of each.
 ################################################################
-FindLocLin <- function(yall, xall, alpha, weights = TRUE, plots = TRUE) {
-    
-    #  Initialize results  #
-    res  <-  array(,dim=c(1,7))
-    
-    #  Initialize minimum data window  #
-    h    <-  ceiling((alpha*length(yall))/2)
-    
+FindLocLin <- function(yall, xall, alpha, plots=TRUE, ...) {
+    #  Window sizes  #
+    allHs  <-  seq(ceiling((alpha*length(yall))/2), (length(yall) - 1)/2)
     #  Start Loops  #
-    while((2*h)+1 <= length(yall)) {
-        for (i in 1:length(yall)) {
-            
-            if (i-h < 1 | i+h > length(yall)) {
-                next
-            } else {
-                y <- yall[c((i-h) : (i+h))]
-                x <- xall[c((i-h) : (i+h))]
-            }
-            
-            
-            ##  FIT BLOCK  ##        
-            LocFit  <-  LocReg(x, y, h, weights)
-            
-            ##  Calculate Statistics of Interest  ##
-            r2 <- 1 - ((sum((y - LocFit$yHat)^2)) / (sum((y - mean(y))^2)))
-            alph <- ((2*h)+1) / length(yall)
-            res <- rbind(res,c(i, h, alph, LocFit$bHat[1], LocFit$bHat[2], Skew(x = LocFit$stdResid), r2))
-        }
-        h <- h + 1
+    res  <-  data.frame()
+    for(k in seq_along(allHs)) {
+        res  <-  rbind(res, moveWindows(allHs[k], x=xall, y=yall, ...))
     }
-    
-    ##  Compile and Sort Results  ##
-    res <- data.frame(res[-1,])
-    
     #  Calculate combined metric (L) for linearity & fit  #
-    #L <- ((min(abs(res[,6])) + abs(res[,6]))/sd(res[,6])) + ((max(res[,7]) - res[,7])/sd(res[,7]))
-    L <- ((min(res[,6]) + abs(res[,6]))/sd(res[,6])) + ((max(res[,7]) - res[,7])/sd(res[,7]))
-    res <- cbind(res,L)
-    
-    res <- data.frame(res[order(res[,8]),][1:25,])
-    names(res) <- c("i","h", "alpha", "b0","b1","skew","r2", "L")
-    
-    
-    
-    ################################
-    ##  Plots to accompany best results  ##
-    
+    res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))    
+    res    <-  res[with(res, order(L)), ][1:25,]
+    #  Plots to accompany best results  #
     if(plots) {        
-        to.pdf(outputPlot(res, xall, yall), "testPlots.pdf", height=15, width=15)
-        to.pdf(outputHist(res), "testHist.pdf", height=15, width=15)
+        to.pdf(outputPlot(res, xall, yall), 'testPlots.pdf', height=15, width=15)
+        to.pdf(outputHist(res), 'testHist.pdf', height=7, width=7)
+    }    
+    res   
+}
+
+################
+# MOVING WINDOWS
+################
+moveWindows  <-  function(h, x, y, ...) {
+    allYs   <-  seq_along(y)
+    badYs   <-  allYs - h < 1 | allYs + h > length(y)
+    goodYs  <-  allYs[!badYs]  
+    res     <-  data.frame(matrix(NA, length(goodYs), 7))
+
+    for(i in seq_along(goodYs)) {        
+        ySub <- y[c((goodYs[i]-h) : (goodYs[i]+h))]
+        xSub <- x[c((goodYs[i]-h) : (goodYs[i]+h))]  
+        #  Fit block  #
+        LocFit  <-  LocReg(xSub, ySub, h, ...)    
+        #  Calculate Statistics of Interest  #
+        r2        <-  1 - ((sum((ySub - LocFit$yHat)^2)) / (sum((ySub - mean(ySub))^2)))
+        alph      <-  ((2*h)+1) / length(y)
+        res[i, ]  <-  c(goodYs[i], h, alph, LocFit$bHat[1], LocFit$bHat[2], Skew(x = LocFit$stdResid), r2)
     }
-    
-    ##  Output Results  ##    
+    names(res)  <-  c('i', 'h', 'alpha', 'b0', 'b1', 'skew', 'r2')
     res
-    
-}  #*** END OF FUNCTION
+}
 
-## PLOTTING FUNCTIONS
-
+####################
+# PLOTTING FUNCTIONS
+####################
 to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
   if ( verbose )
     cat(sprintf('Creating %s\n', filename))
