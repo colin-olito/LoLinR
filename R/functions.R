@@ -14,13 +14,9 @@
 # used to calculate the weights for Weighted Least Squares Regression.
 
 TriCube  <-  function(x, h) {
-    c  <-  h+1    
-    z  <-  abs(x-x[c]) / h
-    if(z < 1) {
-        (1 - z^3)^3
-    } else {
-        0
-    }
+    j  <-  h + 1
+    z  <-  abs(x - x[j]) / h
+    ifelse(z < 1, (1 - z^3)^3, 0)
 }
 
 
@@ -51,28 +47,27 @@ Skew  <-  function(x) {
 # bit of code.
 
 LocReg  <-  function(x, y, h, weights = TRUE) {
-    
     # Design Matrix #
-    X  <-  matrix(cbind(1,x), ncol=2)
+    X  <-  matrix(cbind(1, x), ncol=2)
     
-    if(!weights){ # Use Ordinary Least Squares Regression #
+    if(!weights) { # Use Ordinary Least Squares Regression #
         # Fit Model #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
         hatMat      <-  X %*% (solve(t(X) %*% X)) %*% t(X) %*% y
-        sigmaHat    <-  sum((y-(X %*% bHat))^2) / length(y)
+        sigmaHat    <-  sum((y - (X %*% bHat))^2) / length(y)
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
-        stdResid    <-  (y - yHat)/sqrt(yHat)
+        stdResid    <-  (y - yHat) / sqrt(yHat)
     } else { # Use Weighted Least Squares Regression #
-        # Calcualate weights #
+        # Calculate weights #
         w  <-  TriCube(x=x, h=h)
         # Fit Model #
         bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         yHat        <-  X %*% bHat
         hatMat      <-  X %*% (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         sigmaHat    <-  sum((y - (X %*% bHat))^2)/length(y)
-        sigmaHatUb  <-  sum((y-(X %*% bHat))^2)/(length(y) - 2)
-        stdResid    <-  (y - yHat)/sqrt(yHat)
+        sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
+        stdResid    <-  (y - yHat) / sqrt(yHat)
     }
     
     ##  Output results  ##
@@ -141,9 +136,6 @@ LocReg  <-  function(x, y, h, weights = TRUE) {
 # metrics, and returns the 25 'best' local linear regressions, as well as
 # plots of each.
 ################################################################
-
-
-
 FindLocLin <- function(yall, xall, alpha, weights = TRUE, plots = TRUE) {
     
     #  Initialize results  #
@@ -156,16 +148,16 @@ FindLocLin <- function(yall, xall, alpha, weights = TRUE, plots = TRUE) {
     while((2*h)+1 <= length(yall)) {
         for (i in 1:length(yall)) {
             
-            if (i-h < 1 | i+h > length(yall))
+            if (i-h < 1 | i+h > length(yall)) {
                 next
-            else {
+            } else {
                 y <- yall[c((i-h) : (i+h))]
                 x <- xall[c((i-h) : (i+h))]
             }
             
             
             ##  FIT BLOCK  ##        
-            LocFit <- LocReg(x=x, y=y, h=h, weights=weights)
+            LocFit  <-  LocReg(x, y, h, weights)
             
             ##  Calculate Statistics of Interest  ##
             r2 <- 1 - ((sum((y - LocFit$yHat)^2)) / (sum((y - mean(y))^2)))
@@ -191,39 +183,46 @@ FindLocLin <- function(yall, xall, alpha, weights = TRUE, plots = TRUE) {
     ################################
     ##  Plots to accompany best results  ##
     
-    if(plots==TRUE) {
-        
-        pdf(file="testplots.pdf", height=15, width=15)
-        par(mfrow=c(5,5))
-        
-        for(i in 1:nrow(res)) {
-            ytemp <- yall[c((res$i[i]-res$h[i]) : (res$i[i]+res$h[i]))]
-            xtemp <- xall[c((res$i[i]-res$h[i]) : (res$i[i]+res$h[i]))]
-            
-            plot(yall ~ xall, pch=21, col='grey80', main=i)
-            points(ytemp ~ xtemp, pch=21, bg=1, col=2,ask=TRUE)
-            abline(coef=c(res$b0[i],res$b1[i]), col=2)
-        }
-        graphics.off()
-        
-        dev.new()
-        hist(res$b1, breaks=25)
-        
+    if(plots) {        
+        to.pdf(outputPlot(res, xall, yall), "testPlots.pdf", height=15, width=15)
+        to.pdf(outputHist(res), "testHist.pdf", height=15, width=15)
     }
     
-    
-    ##  Return Results  ##    
-    return(res)
+    ##  Output Results  ##    
+    res
     
 }  #*** END OF FUNCTION
 
+## PLOTTING FUNCTIONS
 
+to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
+  if ( verbose )
+    cat(sprintf('Creating %s\n', filename))
+  dev(filename, ...)
+  on.exit(dev.off())
+  eval.parent(substitute(expr))
+}
 
+to.pdf <- function(expr, filename, ...) {
+  to.dev(expr, pdf, filename, ...)
+}
 
+outputPlot  <-  function(resultsTable, x, y) {
+        par(mfrow=c(5,5))
+        
+        for(i in 1:nrow(resultsTable)) {
+            ytemp <- y[c((resultsTable$i[i]-resultsTable$h[i]) : (resultsTable$i[i]+resultsTable$h[i]))]
+            xtemp <- x[c((resultsTable$i[i]-resultsTable$h[i]) : (resultsTable$i[i]+resultsTable$h[i]))]
+            
+            plot(y ~ x, pch=21, col='grey80', main=i)
+            points(ytemp ~ xtemp, pch=21, bg=1, col=2,ask=TRUE)
+            abline(coef=c(resultsTable$b0[i],resultsTable$b1[i]), col=2)
+        }
+}
 
-
-
-
+outputHist  <-  function(resultsTable) {
+        hist(resultsTable$b1, breaks=25)
+}
 
 
 
