@@ -12,7 +12,6 @@
 # TriCube() is a function to calculate Tri-Cube weights for a given vector of values
 # for an independent variable. This function is a dependency for FindLocLin(), and is
 # used to calculate the weights for Weighted Least Squares Regression.
-
 TriCube  <-  function(x, h) {
     j  <-  h + 1
     z  <-  abs(x - x[j]) / h
@@ -45,27 +44,21 @@ Skew  <-  function(x) {
 # function will consist of the 'guts' of the Fit Block... I imagine that much of the
 # flexibility in the FindLocLin() function will come from minor modifications to this
 # bit of code.
-
 LocReg  <-  function(x, y, h, weights=TRUE, verbose=TRUE) {
-    # Design Matrix #
-    X  <-  matrix(cbind(1, x), ncol=2)
-    
     if(verbose) {
         cat(h, ' ', weights, '\n')
     }
-    
-    if(weights) { # Use Ordinary Least Squares Regression #
-        # Calculate weights #
-        w  <-  TriCube(x=x, h=h)
-        # Fit Model #
+    # Design Matrix #
+    X  <-  matrix(cbind(1, x), ncol=2)
+    if(weights) { # Use Weighted Least Squares Regression #
+        w           <-  TriCube(x=x, h=h)
         bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         yHat        <-  X %*% bHat
         hatMat      <-  X %*% (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         sigmaHat    <-  sum((y - (X %*% bHat))^2)/length(y)
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(yHat)
-    } else { # Use Weighted Least Squares Regression #
-        # Fit Model #
+    } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
         hatMat      <-  X %*% (solve(t(X) %*% X)) %*% t(X) %*% y
@@ -73,16 +66,14 @@ LocReg  <-  function(x, y, h, weights=TRUE, verbose=TRUE) {
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(yHat)
     }
-    
-    ##  Output results  ##
     list('bHat'        = as.vector(bHat),
          'yHat'        = as.vector(yHat),
          'hatMat'      = as.vector(hatMat),
          'sigmaHat'    = as.vector(sigmaHat),
          'sigmaHatUb'  = as.vector(sigmaHatUb),
-         'stdResid'    = as.vector(stdResid))
+         'stdResid'    = as.vector(stdResid),
+         'weights'     = weights)
 }
-
 
 ################################################################
 #  Function FindLocLin():
@@ -140,21 +131,23 @@ LocReg  <-  function(x, y, h, weights=TRUE, verbose=TRUE) {
 # metrics, and returns the 25 'best' local linear regressions, as well as
 # plots of each.
 ################################################################
-FindLocLin <- function(yall, xall, alpha, plots=TRUE, ...) {
+FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
     #  Window sizes  #
     allHs  <-  seq(ceiling((alpha*length(yall))/2), (length(yall) - 1)/2)
     #  Start Loops  #
-    res  <-  data.frame()
+    res  <-  vector(mode='list', length=length(allHs))
     for(k in seq_along(allHs)) {
-        res  <-  rbind(res, moveWindows(allHs[k], x=xall, y=yall, ...))
+        res[[k]]  <-  moveWindows(allHs[k], x=xall, y=yall, ...)
     }
+    res  <-  do.call(rbind.data.frame, res)
+
     #  Calculate combined metric (L) for linearity & fit  #
     res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))    
     res    <-  res[with(res, order(L)), ][1:25,]
     #  Plots to accompany best results  #
     if(plots) {        
-        to.pdf(outputPlot(res, xall, yall), 'testPlots.pdf', height=15, width=15)
-        to.pdf(outputHist(res), 'testHist.pdf', height=7, width=7)
+        toPdf(outputPlot(res, xall, yall), 'testPlots.pdf', height=15, width=15)
+        toPdf(outputHist(res), 'testHist.pdf', height=7, width=7)
     }    
     res   
 }
@@ -163,29 +156,34 @@ FindLocLin <- function(yall, xall, alpha, plots=TRUE, ...) {
 # MOVING WINDOWS
 ################
 moveWindows  <-  function(h, x, y, ...) {
-    allYs   <-  seq_along(y)
-    badYs   <-  allYs - h < 1 | allYs + h > length(y)
-    goodYs  <-  allYs[!badYs]  
-    res     <-  data.frame(matrix(NA, length(goodYs), 7))
+    allYs       <-  seq_along(y)
+    badYs       <-  allYs - h < 1 | allYs + h > length(y)
+    goodYs      <-  allYs[!badYs]  
+    res         <-  data.frame(matrix(NA, length(goodYs), 8))
+    names(res)  <-  c('i', 'h', 'alpha', 'b0', 'b1', 'skew', 'r2', 'weights')
 
     for(i in seq_along(goodYs)) {        
-        ySub <- y[c((goodYs[i]-h) : (goodYs[i]+h))]
-        xSub <- x[c((goodYs[i]-h) : (goodYs[i]+h))]  
-        #  Fit block  #
-        LocFit  <-  LocReg(xSub, ySub, h, ...)    
-        #  Calculate Statistics of Interest  #
-        r2        <-  1 - ((sum((ySub - LocFit$yHat)^2)) / (sum((ySub - mean(ySub))^2)))
-        alph      <-  ((2*h)+1) / length(y)
-        res[i, ]  <-  c(goodYs[i], h, alph, LocFit$bHat[1], LocFit$bHat[2], Skew(x = LocFit$stdResid), r2)
+        ySub            <-  y[c((goodYs[i]-h) : (goodYs[i]+h))]
+        xSub            <-  x[c((goodYs[i]-h) : (goodYs[i]+h))]
+        LocFit          <-  LocReg(xSub, ySub, h, ...)
+        r2              <-  1 - ((sum((ySub - LocFit$yHat)^2)) / (sum((ySub - mean(ySub))^2)))
+        alph            <-  ((2*h)+1) / length(y)
+        res$i[i]        <-  goodYs[i]
+        res$h[i]        <-  h
+        res$alpha[i]    <-  alph
+        res$b0[i]       <-  LocFit$bHat[1]
+        res$b1[i]       <-  LocFit$bHat[2]
+        res$skew[i]     <-  Skew(x = LocFit$stdResid)
+        res$r2[i]       <-  r2
+        res$weights[i]  <-  LocFit$weights
     }
-    names(res)  <-  c('i', 'h', 'alpha', 'b0', 'b1', 'skew', 'r2')
     res
 }
 
 ####################
 # PLOTTING FUNCTIONS
 ####################
-to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
+toDev  <-  function(expr, dev, filename, ..., verbose=TRUE) {
   if ( verbose )
     cat(sprintf('Creating %s\n', filename))
   dev(filename, ...)
@@ -193,8 +191,8 @@ to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
   eval.parent(substitute(expr))
 }
 
-to.pdf <- function(expr, filename, ...) {
-  to.dev(expr, pdf, filename, ...)
+toPdf  <-  function(expr, filename, ...) {
+  toDev(expr, pdf, filename, ...)
 }
 
 outputPlot  <-  function(resultsTable, x, y) {
@@ -213,16 +211,6 @@ outputPlot  <-  function(resultsTable, x, y) {
 outputHist  <-  function(resultsTable) {
         hist(resultsTable$b1, breaks=25)
 }
-
-
-
-
-
-
-
-
-
-
 
 ###################################################
 #  Function PlotBest():
@@ -245,20 +233,16 @@ outputHist  <-  function(resultsTable) {
 #                     least squares regression (using TriCube)
 #                     weights.
 ###################################################
-
-PlotBest <- function(res, best, yall, xall, weights = TRUE) {
+PlotBest <- function(res, yall, xall, best=1, weights=TRUE) {
     
-    # Recover data window for chosen local regression model   
+    #  Recover data window for chosen local regression model  #
     y <- yall[c((res$i[best] - res$h[best]) : (res$i[best] + res$h[best]))]
     x <- xall[c((res$i[best] - res$h[best]) : (res$i[best] + res$h[best]))]
     
-    ##  FIT BLOCK  ##        
+    #  Fit block  #
+    LocFit <- LocReg(x=x, y=y, h=res$h[best], weights=res$weights[best])
     
-    LocFit <- LocReg(x=x, y=y, h=res$h[best], weights=weights)
-    
-    
-    ##  Residual Plots  ##
-    #pdf(file="residplots.pdf", height=10, width=10)
+    #  Residual Plots  #
     dev.new()
     par(mfrow=c(2,2))
     plot(LocFit$stdResid ~ x,
@@ -277,15 +261,11 @@ PlotBest <- function(res, best, yall, xall, weights = TRUE) {
     qqline(LocFit$stdResid,col=2)
     
     hist(LocFit$stdResid, xlab="Standardized Residuals", ylab="Density",breaks=20, main="Density Plot of Std. Residuals")
-    #graphics.off()
     
-    ##  Overall Regression Plot  ##
+    #  Overall Regression Plot  #
     dev.new()
     plot(yall ~ xall, pch=21, col='grey80', ask=TRUE,
          main=expression(paste("Best Local Regression: ",b[o], " = ", bHat[1,], " = ", bHat[2,])))
     points(y ~ x, pch=21, bg=1, col=2,ask=TRUE)
-    abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)
-    
-    
-}  #END OF FUNCTION
-
+    abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)    
+}
