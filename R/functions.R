@@ -74,13 +74,14 @@ LocReg  <-  function(x, y, h, weights=TRUE, verbose=TRUE) {
         stdResid    <-  (y - yHat) / sqrt(yHat)
     }
     
-    ##  Output results  ##
+    #  Output results  #
     list('bHat'        = as.vector(bHat),
          'yHat'        = as.vector(yHat),
          'hatMat'      = as.vector(hatMat),
          'sigmaHat'    = as.vector(sigmaHat),
          'sigmaHatUb'  = as.vector(sigmaHatUb),
-         'stdResid'    = as.vector(stdResid))
+         'stdResid'    = as.vector(stdResid),
+         'weights'     = weights)
 }
 
 
@@ -163,10 +164,11 @@ FindLocLin <- function(yall, xall, alpha, plots=TRUE, ...) {
 # MOVING WINDOWS
 ################
 moveWindows  <-  function(h, x, y, ...) {
-    allYs   <-  seq_along(y)
-    badYs   <-  allYs - h < 1 | allYs + h > length(y)
-    goodYs  <-  allYs[!badYs]  
-    res     <-  data.frame(matrix(NA, length(goodYs), 7))
+    allYs       <-  seq_along(y)
+    badYs       <-  allYs - h < 1 | allYs + h > length(y)
+    goodYs      <-  allYs[!badYs]  
+    res         <-  data.frame(matrix(NA, length(goodYs), 8))
+    names(res)  <-  c('i', 'h', 'alpha', 'b0', 'b1', 'skew', 'r2', 'weights')
 
     for(i in seq_along(goodYs)) {        
         ySub <- y[c((goodYs[i]-h) : (goodYs[i]+h))]
@@ -176,9 +178,15 @@ moveWindows  <-  function(h, x, y, ...) {
         #  Calculate Statistics of Interest  #
         r2        <-  1 - ((sum((ySub - LocFit$yHat)^2)) / (sum((ySub - mean(ySub))^2)))
         alph      <-  ((2*h)+1) / length(y)
-        res[i, ]  <-  c(goodYs[i], h, alph, LocFit$bHat[1], LocFit$bHat[2], Skew(x = LocFit$stdResid), r2)
+        res$i[i]        <-  goodYs[i]
+        res$h[i]        <-  h
+        res$alpha[i]    <-  alph
+        res$b0[i]       <-  LocFit$bHat[1]
+        res$b1[i]       <-  LocFit$bHat[2]
+        res$skew[i]     <-  Skew(x = LocFit$stdResid)
+        res$r2[i]       <-  r2
+        res$weights[i]  <-  LocFit$weights
     }
-    names(res)  <-  c('i', 'h', 'alpha', 'b0', 'b1', 'skew', 'r2')
     res
 }
 
@@ -215,15 +223,6 @@ outputHist  <-  function(resultsTable) {
 }
 
 
-
-
-
-
-
-
-
-
-
 ###################################################
 #  Function PlotBest():
 #
@@ -246,19 +245,16 @@ outputHist  <-  function(resultsTable) {
 #                     weights.
 ###################################################
 
-PlotBest <- function(res, best, yall, xall, weights = TRUE) {
+PlotBest <- function(res, yall, xall, best=1, weights=TRUE) {
     
-    # Recover data window for chosen local regression model   
+    #  Recover data window for chosen local regression model  #
     y <- yall[c((res$i[best] - res$h[best]) : (res$i[best] + res$h[best]))]
     x <- xall[c((res$i[best] - res$h[best]) : (res$i[best] + res$h[best]))]
     
-    ##  FIT BLOCK  ##        
+    #  Fit block  #
+    LocFit <- LocReg(x=x, y=y, h=res$h[best], weights=res$weights[best])
     
-    LocFit <- LocReg(x=x, y=y, h=res$h[best], weights=weights)
-    
-    
-    ##  Residual Plots  ##
-    #pdf(file="residplots.pdf", height=10, width=10)
+    #  Residual Plots  #
     dev.new()
     par(mfrow=c(2,2))
     plot(LocFit$stdResid ~ x,
@@ -277,15 +273,11 @@ PlotBest <- function(res, best, yall, xall, weights = TRUE) {
     qqline(LocFit$stdResid,col=2)
     
     hist(LocFit$stdResid, xlab="Standardized Residuals", ylab="Density",breaks=20, main="Density Plot of Std. Residuals")
-    #graphics.off()
     
-    ##  Overall Regression Plot  ##
+    #  Overall Regression Plot  #
     dev.new()
     plot(yall ~ xall, pch=21, col='grey80', ask=TRUE,
          main=expression(paste("Best Local Regression: ",b[o], " = ", bHat[1,], " = ", bHat[2,])))
     points(y ~ x, pch=21, bg=1, col=2,ask=TRUE)
-    abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)
-    
-    
-}  #END OF FUNCTION
-
+    abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)    
+}
