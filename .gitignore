@@ -3,3 +3,6 @@
 *.R*istory*
 *.doc*
 *.xls*
+.Rproj.user
+.Rhistory
+.RData

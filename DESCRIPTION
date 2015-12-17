@@ -1,0 +1,9 @@
+Package: LoLinR
+Title: Local Linear Regression for Estimating Monotonic Biological Rates From Time-Series and Trace Data
+Version: 0.0.0.9000
+Authors@R: person("Colin", "Olito", email = "colin.olito@gmail.com", role = c("aut", "cre")), person("Diego", "Barneche", email = "barnechedr@gmail.com", role = c("aut", "cre")) 
+Description: Local Linear Regression for estimating monotonic biological rates from often messy and non-linear time-series and trace data .
+Depends: R (>= 3.2.2)
+License: What license is it under?
+LazyData: true
+Suggests: testthat
