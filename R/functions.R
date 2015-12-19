@@ -36,9 +36,9 @@ Skew  <-  function(x) {
 
 
 ################################################################
-#  Dependency -- LinReg():
+#  Dependency -- LocReg():
 #
-# LinReg() is a wrapper for a function to fit a simple linear regression using either
+# LocReg() is a wrapper for a function to fit a simple linear regression using either
 # weighted or unweighted least squares. The function uses matrix notation to minimize
 # memory usage relative to fitting any of the Base linear model functions in R. This
 # function will consist of the 'guts' of the Fit Block... I imagine that much of the
