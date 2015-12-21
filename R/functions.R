@@ -18,6 +18,13 @@ TriCube  <-  function(x, h) {
     ifelse(z < 1, (1 - z^3)^3, 0)
 }
 
+TriCube(x=x,3)
+
+TriCube  <-  function(x, h) {
+    z  <-  abs(x - x[j]) / (x[win[2]]-x[win[1]])
+    ifelse(z < 1, (1 - z^3)^3, 0)
+}
+
 
 
 ################################################################

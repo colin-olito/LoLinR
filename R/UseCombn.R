@@ -19,6 +19,14 @@ TriCube  <-  function(x, h) {
 }
 
 
+TriCube  <-  function(x, m, h) {
+#browser()
+    z  <-  abs(x - m) / h
+    ifelse(z < 1, (1 - z^3)^3, 0)
+}
+
+TriCube(x=x,5.5,5)
+
 
 ################################################################
 #  Dependency -- Function Skew():
@@ -123,16 +131,12 @@ nCm <- function (x, m, FUN = NULL, simplify = TRUE, ...)
 ################################################################
 # GET WINDOWS
 #############
-GetWindows <- function(y, alpha, ...) {
+GetWindows <- function(y, alpha) {
     lenY <- length(y)
     minWin <- ceiling((alpha*lenY))
     allWindows <- nCm(lenY, 2)
     t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
 }
-
-
-y <- sort(rnorm(100))
-GetWindows(y, alpha=0.2)
 
 
 ################################################################
@@ -144,52 +148,47 @@ GetWindows(y, alpha=0.2)
 # function will consist of the 'guts' of the Fit Block... I imagine that much of the
 # flexibility in the FindLocLin() function will come from minor modifications to this
 # bit of code.
-LocReg  <-  function(xall, yall, wins, ..., weights=TRUE, verbose=TRUE) {
-    if(verbose) {
-        cat(h, ' ', weights, '\n')
-    }
+
+LocReg  <-  function(wins, xall, yall, ..., weights=TRUE, verbose=TRUE) {
+#    if(verbose) {
+#        cat(h, ' ', weights, '\n')
+#    }
     #  Grab data window for local regression  #
+browser()
     x <- xall[wins[1]:wins[2]]
     y <- yall[wins[1]:wins[2]]
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
     if(weights) { # Use Weighted Least Squares Regression #
-        w           <-  TriCube(x=x, h=h)
+        w           <-  TriCube(x=x, m=mean(x), h=(x[wins[2]]-mean(x)))
         bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         yHat        <-  X %*% bHat
-        hatMat      <-  X %*% (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
-        sigmaHat    <-  sum((y - (X %*% bHat))^2)/length(y)
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
-        stdResid    <-  (y - yHat) / sqrt(yHat)
+        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
-        hatMat      <-  X %*% (solve(t(X) %*% X)) %*% t(X) %*% y
-        sigmaHat    <-  sum((y - (X %*% bHat))^2) / length(y)
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
-        stdResid    <-  (y - yHat) / sqrt(yHat)
+        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
     }
-    list('bHat'        = as.vector(bHat),
-         'yHat'        = as.vector(yHat),
-         'hatMat'      = as.vector(hatMat),
-         'sigmaHat'    = as.vector(sigmaHat),
-         'sigmaHatUb'  = as.vector(sigmaHatUb),
-         'stdResid'    = as.vector(stdResid),
-         'weights'     = weights)
+    data.frame(
+        Lbound   = wins[1],
+        Rbound   = wins[2],
+        r2       =  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2))),
+        alph     =  length(wins[1]:wins[2])/length(yall),
+        b0       =  bHat[1],
+        b1       =  bHat[2],
+        skew     =  Skew(x = stdResid), stringsAsFactors=FALSE)
 }
 
 
 ################################################################
 FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
     #  Get windows # 
-    windows <- GetWindows(y = yall, ...) 
+    windows <- GetWindows(y = yall, alpha) 
     #  Fit Local Regressions  #
-    apply(windows, 1, FUN = LocReg(yall, xall, alpha, windows=windows)
-
+    res  <-  apply(windows, 1, LocReg, xall=xall, yall=yall)
     res  <-  do.call(rbind.data.frame, res)
-
-
-    
     #  Calculate combined metric (L) for linearity & fit  #
     res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))    
     res    <-  res[with(res, order(L)), ][1:25,]
@@ -202,9 +201,15 @@ FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
 }
 
 
+xtest <- c(1:20)
+ytest <- 0.3*xtest + 1.5 + rnorm(20,sd=0.4)
+    wins <- GetWindows(y=ytest, alpha=0.4)
+    wins
+    res  <-  apply(wins,1, LocReg, xall=xtest, yall=ytest, weights=TRUE)
+    res  <-  do.call(rbind.data.frame, res)
+    res
 
-    y <- sort(rnorm(10))
-    x <- sort(rnorm(10))
-    w <- GetWindows(y=y, alpha=0.2)
-    w
-    apply(w,1, FUN=LocReg(y=y,x=x,wins=w))
+apply(wins,1, mean)
+
+x <- x[wins[1,][1]:wins[1,][2]]
+y <- y[wins[1,][1]:wins[1,][2]]
