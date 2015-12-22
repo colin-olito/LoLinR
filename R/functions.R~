@@ -143,7 +143,6 @@ FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
 
     #  Calculate combined metric (L) for linearity & fit  #
     res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))    
-print(nrow(res))
     res    <-  res[with(res, order(L)), ][1:25,]
     #  Plots to accompany best results  #
     if(plots) {        

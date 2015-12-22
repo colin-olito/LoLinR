@@ -12,20 +12,17 @@
 # TriCube() is a function to calculate Tri-Cube weights for a given vector of values
 # for an independent variable. This function is a dependency for FindLocLin(), and is
 # used to calculate the weights for Weighted Least Squares Regression.
-TriCube  <-  function(x, h) {
-    j  <-  h + 1
-    z  <-  abs(x - x[j]) / h
-    ifelse(z < 1, (1 - z^3)^3, 0)
-}
-
-
 TriCube  <-  function(x, m, h) {
-#browser()
     z  <-  abs(x - m) / h
     ifelse(z < 1, (1 - z^3)^3, 0)
 }
 
-TriCube(x=x,5.5,5)
+# Deprecated version of TriCube() using midpoint and half-windows
+# TriCube1  <-  function(x, h) {
+#     j  <-  h + 1
+#     z  <-  abs(x - x[j]) / h
+#     ifelse(z < 1, (1 - z^3)^3, 0)
+# }
 
 
 ################################################################
@@ -51,7 +48,7 @@ Skew  <-  function(x) {
 #        function down to just what we need)... need to ask
 #        Diego...
 
-nCm <- function (x, m, FUN = NULL, simplify = TRUE, ...) 
+combn <- function (x, m, FUN = NULL, simplify = TRUE, ...) 
 {
     stopifnot(length(m) == 1L, is.numeric(m))
     if (m < 0) 
@@ -133,7 +130,7 @@ nCm <- function (x, m, FUN = NULL, simplify = TRUE, ...)
 #############
 GetWindows <- function(y, alpha) {
     lenY <- length(y)
-    minWin <- ceiling((alpha*lenY))
+    minWin <- floor((alpha*lenY))
     allWindows <- nCm(lenY, 2)
     t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
 }
@@ -154,13 +151,13 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE, verbose=TRUE) {
 #        cat(h, ' ', weights, '\n')
 #    }
     #  Grab data window for local regression  #
-browser()
+#browser()
     x <- xall[wins[1]:wins[2]]
     y <- yall[wins[1]:wins[2]]
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
     if(weights) { # Use Weighted Least Squares Regression #
-        w           <-  TriCube(x=x, m=mean(x), h=(x[wins[2]]-mean(x)))
+        w           <-  TriCube(x=x, m=mean(x), h=(x[length(x)] - x[1])/2)
         bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         yHat        <-  X %*% bHat
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
@@ -187,8 +184,8 @@ FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
     #  Get windows # 
     windows <- GetWindows(y = yall, alpha) 
     #  Fit Local Regressions  #
-    res  <-  apply(windows, 1, LocReg, xall=xall, yall=yall)
-    res  <-  do.call(rbind.data.frame, res)
+    res   <-  apply(windows, 1, LocReg, xall=xall, yall=yall)
+    res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))    
     res    <-  res[with(res, order(L)), ][1:25,]
@@ -201,15 +198,37 @@ FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
 }
 
 
-xtest <- c(1:20)
-ytest <- 0.3*xtest + 1.5 + rnorm(20,sd=0.4)
-    wins <- GetWindows(y=ytest, alpha=0.4)
-    wins
-    res  <-  apply(wins,1, LocReg, xall=xtest, yall=ytest, weights=TRUE)
-    res  <-  do.call(rbind.data.frame, res)
-    res
 
-apply(wins,1, mean)
 
-x <- x[wins[1,][1]:wins[1,][2]]
-y <- y[wins[1,][1]:wins[1,][2]]
+
+####################
+# PLOTTING FUNCTIONS
+####################
+toDev  <-  function(expr, dev, filename, ..., verbose=TRUE) {
+  if ( verbose )
+    cat(sprintf('Creating %s\n', filename))
+  dev(filename, ...)
+  on.exit(dev.off())
+  eval.parent(substitute(expr))
+}
+
+toPdf  <-  function(expr, filename, ...) {
+  toDev(expr, pdf, filename, ...)
+}
+
+outputPlot  <-  function(resultsTable, x, y) {
+        par(mfrow=c(5,5))
+        for(i in 1:nrow(resultsTable)) {
+            # Subset Data #
+            ytemp <- y[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
+            xtemp <- x[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
+            # Plot #
+            plot(y ~ x, pch=21, col='grey80', main=i)
+            points(ytemp ~ xtemp, pch=21, bg=1, col=2,ask=TRUE)
+            abline(coef=c(resultsTable$b0[i],resultsTable$b1[i]), col=2)
+        }
+}
+
+outputHist  <-  function(resultsTable) {
+        hist(resultsTable$b1, breaks=25)
+}
