@@ -121,13 +121,12 @@ combn <- function (x, m, FUN = NULL, simplify = TRUE, ...)
 ################################################################
 # GET WINDOWS
 #############
-GetWindows <- function(y, alpha) {
-    lenY <- length(y)
-    minWin <- floor((alpha*lenY))
-    allWindows <- combn(lenY, 2)
+GetWindows  <-  function(y, alpha) {
+    lenY        <-  length(y)
+    minWin      <-  floor((alpha*lenY))
+    allWindows  <-  combn(lenY, 2)
     t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
 }
-
 
 ################################################################
 #  Dependency -- LocReg():
@@ -139,10 +138,7 @@ GetWindows <- function(y, alpha) {
 # flexibility in the FindLocLin() function will come from minor modifications to this
 # bit of code.
 
-LocReg  <-  function(wins, xall, yall, ..., weights=TRUE, verbose=TRUE) {
-#    if(verbose) {
-#        cat(h, ' ', weights, '\n')
-#    }
+LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
     #  Grab data window for local regression  #
     x <- xall[wins[1]:wins[2]]
     y <- yall[wins[1]:wins[2]]
@@ -175,9 +171,9 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE, verbose=TRUE) {
 ################################################################
 FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
     #  Get windows # 
-    windows <- GetWindows(y = yall, alpha) 
+    wins  <-  GetWindows(y = yall, alpha)
     #  Fit Local Regressions  #
-    res   <-  apply(windows, 1, LocReg, xall=xall, yall=yall)
+    res   <-  apply(wins, 1, LocReg, xall=xall, yall=yall)
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))
@@ -193,10 +189,6 @@ FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
         'nFits' = nFits
         )
 }
-
-
-
-
 
 ####################
 # PLOTTING FUNCTIONS
