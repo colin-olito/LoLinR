@@ -19,9 +19,8 @@ My main worry is that this function alone is not substantial enough to warrant a
    - distribution of L.
 
 TO DO:
-   - while() statement in FindLocLin()???  vectors of h values for windows
+   - Defensive programming for obvious errors
    - Option for user specified window sizes?
-   - 
    - Diagnostics for combined metric. e.g. L ~ window size.
    - 'Export' everything
 
@@ -32,7 +31,8 @@ TO DO:
 
 - Obvious tests
    - math problems
-   - 
+   - defensive errors
+   - Alignment b/w FindLocLin() & PlotBest() - Make sure these functions return the exact same regression results.
 
 
 - Corner cases
