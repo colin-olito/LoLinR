@@ -1,5 +1,5 @@
 rm(list=ls())
-source('R/functions_list.R')
+source('R/functions.R')
 #source('R/functions.R')
 
 # Import test VO2 data #
