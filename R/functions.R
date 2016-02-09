@@ -318,7 +318,7 @@ PlotBest <- function(res, yall, xall, best=1) {
     dev.new()
     plot(yall ~ xall, pch=21, col='grey80', ask=TRUE,
          main=expression(paste("Best Local Regression: ",beta[o], " = ", LocFit$bHat[1,1], " ",
-                                                         beta[1]," = ", LocFit$bHat[2,1])))
+                               beta[1]," = ", LocFit$bHat[2,1])))
     points(y ~ x, pch=21, bg=1, col=2,ask=TRUE)
     abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)    
 }
