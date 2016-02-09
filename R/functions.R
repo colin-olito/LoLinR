@@ -150,35 +150,45 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         yHat        <-  X %*% bHat
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
     }
     data.frame(
         Lbound   = wins[1],
         Rbound   = wins[2],
-        r2       =  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2))),
+        r2       =  r2adj,
         alph     =  length(wins[1]:wins[2])/length(yall),
         b0       =  bHat[1],
         b1       =  bHat[2],
-        skew     =  Skew(x = stdResid), stringsAsFactors=FALSE,
+        skew     =  Skew(x = stdResid),
         weights  =  weights)
 }
 
 
 ################################################################
-FindLocLin  <-  function(yall, xall, alpha, plots=TRUE, ...) {
+FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, ...) {
     #  Get windows # 
     wins  <-  GetWindows(y = yall, alpha)
     #  Fit Local Regressions  #
     res   <-  apply(wins, 1, LocReg, xall=xall, yall=yall)
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
-    res$L  <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))
+    res$L <-  ((min(res$skew) + abs(res$skew))/sd(res$skew)) + ((max(res$r2) - res$r2)/sd(res$r2))
     nFits <- print(nrow(res))
-    res    <-  res[with(res, order(L)), ][1:25,]
+    if(is.numeric(ref.b1)) {
+        res   <- res[with(res, order(L)), ]
+        res   <- res[with(res, order(abs(ref.b1 - res$b1))), ][1:25,]
+    }
+    else {
+        res   <-  res[with(res, order(L)), ][1:25,]
+    }
     #  Plots to accompany best results  #
     if(plots) {        
         toPdf(outputPlot(res, xall, yall), 'testPlots.pdf', height=15, width=15)
@@ -244,11 +254,17 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
         yHat        <-  X %*% bHat
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2)/(length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        skew     =  Skew(x = stdResid)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
         sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        skew     =  Skew(x = stdResid)
     }
     list(
         'BestWindow' = bestwin,
@@ -256,8 +272,8 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
         'yHat'     = yHat,
         'sigmaHatUb' = sigmaHatUb,
         'stdResid' = stdResid,
-        'r2'       =  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2))),
-        'skew'     =  Skew(x = stdResid), stringsAsFactors=FALSE,
+        'r2'       =  r2adj,
+        'skew'     =  skew,
         'weights'  =  weight)
 }
 
@@ -286,8 +302,8 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
 ###################################################
 PlotBest <- function(res, yall, xall, best=1) {
     #  Recover data window for chosen local regression model  #
-    weight=res$weights[best]
-    bestwin <- c(res$Lbound[best],res$Rbound[best])
+    weight=res$res$weights[best]
+    bestwin <- c(res$res$Lbound[best],res$res$Rbound[best])
     y       <- yall[bestwin[1]:bestwin[2]]
     x       <- xall[bestwin[1]:bestwin[2]]
     #  Fit block  #
