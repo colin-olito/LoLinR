@@ -20,7 +20,7 @@ doReg <- function(y, x) {
     X           <-  matrix(cbind(1, x), ncol=2)
     bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
     yHat        <-  X %*% bHat
-    sigmaHatUb  <-  sum((y - (X %*% bHat))^2) / (length(y) - 2)
+    sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
     stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
     r2          <- 1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
     r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
@@ -41,7 +41,7 @@ doReg <- function(y, x) {
 
 
 doRegCI <- function(y, x) {
-X           <-  matrix(cbind(1, x), ncol=2)
+    X           <-  matrix(cbind(1, x), ncol=2)
     bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
     yHat        <-  X %*% bHat
     sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
@@ -82,11 +82,37 @@ RegCI1$CIrange
 
 
 
+test <- acf(data$y)$acf
+
+plot(data$y ~ data$x)
+mod <- lm(data$y ~ data$x)
+acf(mod$res)
+
+spectrum(data$y)
 plot(RegCI1$r2adj ~ RegCI1$CIrange)
 
 
+plot(data$D ~ data$time)
+mod <- lm(data$D ~ data$time)
+plot(mod)
+acf(mod$res, lag.max=100)
 
+acf
+
+
+(solve(t(X) %*% X))
         
+H <- X %*% (solve(t(X) %*% X)) %*% t(X)
+SSE <- (t(y) %*% (diag(nrow(X)) - H) %*% y)/(nrow(X) - 2)
+
+l <- X[,1]
+M <- l %*% (solve(t(l) %*% l)) %*% t(l)
+MSE <- (t(y) %*% (diag(nrow(X)) - M) %*% y)/(nrow(X) - 1)
+
+1 - SSE/MSE
+
+
+(solve(t(X) %*% X))
 
 
 col1 <- adjustcolor('blue', alpha=0.2)
@@ -154,7 +180,7 @@ r <- c()
 radj <- c()
 CIrange <- c()
 for (i in 1:100) {
-    testdat <- makedata(n=200, sd.x = 2, sd.e = 1)
+    testdat <- makedata(n=200, b1 = -5, sd.x = 2, sd.e = 1)
     reg <- doRegCI(testdat$y, testdat$x)
     skew[i] <- reg$skew
     r[i]    <- reg$r2
@@ -170,14 +196,45 @@ col3 <- adjustcolor('green', alpha=0.6)
 par(mfrow=c(2,2))
 plot(r~CIrange,  pch=21, col=1, bg=col1, xlab="C.I. Range")
 points(radj~CIrange, pch=21, col=1, bg=col2)
-
 plot(r~skew,  pch=21, col=1, bg=col1, xlab="skew")
 points(radj~skew, pch=21, col=1, bg=col2)
 plot(CIrange~skew, pch=21, col=1, bg=col3)
 
+
 summary(lm(radj~CIrange))
 
 
+
+skew <- c()
+r <- c()
+radj <- c()
+CIrange <- c()
+testdat <- makedata(n=200, b1 = 0.2, sd.x = 2, sd.e = 1)
+ns <- c(5:length(testdat$x))
+for (i in 1:length(ns)) {
+    reg <- doRegCI(testdat$y[1:ns[i]], testdat$x[1:ns[i]])
+    r[i]    <- reg$r2
+    radj[i] <- reg$r2adj
+    CIrange[i]    <- reg$CIrange
+    skew[i]    <- reg$skew
+}
+
+
+
+par(mfrow=c(2,3))
+plot(r~ns, ylim=c(0,1), pch=21, col=NA, bg=col1, xlab="Sample size")
+points(radj~ns, pch=21, col=NA, bg=col2)
+legend(x=(length(ns)*0.8), y=0.8,c("r2", "r2.adj"), cex=1.25, pch=21, col=NA, fill=c(col1,col2))
+plot(CIrange~ns, ylim=c(0,1), pch=21, col=NA, bg=col1, xlab="Sample size")
+plot(radj~CIrange, pch=21, col=NA, bg=col2, xlab="CIrange")
+plot(radj~abs(skew), ylim=c(0,1), pch=21, col=NA, bg=col2, xlab="skew")
+plot(abs(skew)~CIrange, ylim=c(0,1), pch=21, col=NA, bg=col1, xlab="CIrange")
+plot(abs(skew)~ns, ylim=c(0,1), pch=21, col=NA, bg=col1, xlab="Sample size")
+
+
+
+
+##  Multiple Data Sets  ##
 
 col1 <- adjustcolor('blue', alpha=0.2)
 col2 <- adjustcolor('red', alpha=0.1)
@@ -187,7 +244,7 @@ r <- c()
 radj <- c()
 CIrange <- c()
 for (j in 0:100) {
-    testdat <- makedata(n=200, sd.x = 2, sd.e = 1)
+    testdat <- makedata(n=200, b1 = 0.2, sd.x = 2, sd.e = 1)
     ns <- c(5:length(testdat$x))
     for (i in 1:length(ns)) {
         reg <- doRegCI(testdat$y[1:ns[i]], testdat$x[1:ns[i]])

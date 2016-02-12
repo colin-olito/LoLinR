@@ -152,8 +152,11 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
+        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -161,25 +164,30 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
+        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
     }
     data.frame(
+        weights  = weights,
         Lbound   = wins[1],
         Rbound   = wins[2],
-        r2       =  r2adj,
+#        r2       =  r2adj,
         alph     =  length(wins[1]:wins[2])/length(yall),
         b0       =  bHat[1],
         b1       =  bHat[2],
         b1.CI.lo =  b1.CI[1],
         b1.CI.hi =  b1.CI[2],
-        skew     =  Skew(x = stdResid),
-        weights  =  weights)
+        b1.ac    =  b1.ac[2],
+        skew     =  Skew(x = stdResid)
+    )
 }
 
 
 ################################################################
-FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, ...) {
+FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, all=FALSE, ...) {
     #  Get windows # 
     wins  <-  GetWindows(y = yall, alpha)
     #  Fit Local Regressions  #
@@ -187,15 +195,18 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, ...) {
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     CI.range <- res$b1.CI.hi - res$b1.CI.lo
-    res$L <-  (abs((min(abs(res$skew)) + res$skew)/sd(res$skew))) +
-#              ((max(res$r2) - res$r2)/sd(res$r2)) +  # r2 & CI are strongly correlated. drop R2?
+    res$L <-  ((min(abs(res$skew)) + abs(res$skew))/sd(res$skew)) +
+              ((min(abs(res$b1.ac)) + abs(res$b1.ac))/sd(res$b1.ac)) +
               (min(CI.range) + CI.range)/sd(CI.range)
     nFits <- print(nrow(res))
     if(is.numeric(ref.b1)) {
         res   <- res[with(res, order(L)), ]
-        res   <- res[with(res, order(abs(ref.b1 - res$b1))), ][1:25,]
+        res   <- res[with(res, order(abs(ref.b1 - res$b1))), ]
     } else {
-        res   <-  res[with(res, order(L)), ][1:25,]
+        res   <-  res[with(res, order(L)), ]
+    }
+    if(all == FALSE) {
+        res <- res[1:25,]
     }
     #  Plots to accompany best results  #
     if(plots) {        
@@ -203,8 +214,8 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, ...) {
         toPdf(outputHist(res), 'testHist.pdf', height=7, width=7)
     }    
     list(
-        'nFits' = nFits,
-        'res'   = res
+        'nFits'   = nFits,
+        'res'     = res
         )
 }
 
@@ -254,10 +265,10 @@ outputHist  <-  function(resultsTable) {
 #  the dataset. Also uses a list() to output objects of different
 #  length (e.g. bHat and stdResid).
 
-BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
+BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
-    if(weight) { # Use Weighted Least Squares Regression #
+    if(weights) { # Use Weighted Least Squares Regression #
         w           <-  TriCube(x=x, m=mean(x), h=(x[length(x)] - x[1])/2)
         bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
         yHat        <-  X %*% bHat
@@ -265,8 +276,11 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-        r2adj       <-  r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+#        r2adj       <-  r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
+        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
         skew        <-  Skew(x = stdResid)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
@@ -275,8 +289,11 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
+#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
+        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
         skew     =  Skew(x = stdResid)
     }
     list(
@@ -286,9 +303,10 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
         'sigmaHatUb' = sigmaHatUb,
         'stdResid'   = stdResid,
         'b1.CI'      = b1.CI,
-        'r2'         =  r2adj,
+ #       'r2'         =  r2adj,
+        'b1.ac'       =  b1.ac,
         'skew'       =  skew,
-        'weights'    =  weight)
+        'weights'    =  weights)
 }
 
 
@@ -302,17 +320,13 @@ BestLocReg  <-  function(bestwin, y, x, weight, ..., verbose=TRUE) {
 #
 #    Takes 5 arguments:
 #      -- res:  FindLocLin() output data frame
-#
+#      -- yall:  Same yall input data as for FindLocLin()
+#      -- xall:  Same xall input data as for FindLocLin()
 #      -- best:  row number corresponding to the local linear
 #                 regression from FindLocLIn output the user
 #                 wishes to plot/inspect. Usually the 'best'
 #                 linear regression.
-#      -- yall:  Same yall input data as for FindLocLin()
-#      -- xall:  Same xall input data as for FindLocLin()
-#      -- weights:  As in FindLocLin, an option to perfoyrm
-#                     ordinarly leas squares, or weighted
-#                     least squares regression (using TriCube)
-#                     weights.
+#
 ###################################################
 
 PlotBest <- function(res, yall, xall, best=1) {
