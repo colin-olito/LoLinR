@@ -1,6 +1,7 @@
 rm(list=ls())
 source('R/functions.R')
 col1 <- adjustcolor('#1B6889', alpha=0.5)
+col2 <- adjustcolor('#1B6889', alpha=0.2)
 
 
 
@@ -19,34 +20,56 @@ results
 
 
 
-toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1),
-      filename='UrchinTest_AutoCorr.pdf', height=10, width=10)
-
-
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relations b/w different parts of metric  ##
 results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, ref.b1 = FALSE,
                         plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
 
-
 xrange <- (results$res$Rbound - results$res$Lbound)
 CIrange <- results$res$b1.CI.hi - results$res$b1.CI.lo
 
-par(mfrow=c(2,3))
-plot(density(results$res$L), lwd=4, col=col1, xlab="L")
-plot(CIrange ~ abs(results$res$skew), pch=21, bg=col1)
-plot(results$res$L ~ CIrange, pch=21, bg=col1)
-plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col1)
-plot(results$res$L ~ xrange, pch=21, bg=col1)
-plot(CIrange ~ xrange, pch=21, bg=col1)
-plot(abs(results$res$skew) ~ xrange, pch=21, bg=col1)
+##  Density plots of Metric components  ##
+par(mfrow=c(2,3), cex.lab=1.5)
+plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+plot(density(results$res$skew), lwd=4, col=col1, xlab=expression(paste(italic(Skew))),
+     main=expression(paste("Distribution of Skew")), cex.main=2)
+plot(density(results$res$b1.ac), lwd=4, col=col1, xlab=expression(paste(beta[1~acorr])),
+     main=expression(paste("Distribution of ", beta[1~acorr])), cex.main=2)
+plot(density(CIrange), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of C.I. range")), cex.main=2)
 
+##  L ~ component parts  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ CIrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="C.I. range")
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="Skew")
+plot(results$res$L ~  results$res$b1.ac, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(beta[1~acorr])))
 
-Breg <- doRegCI(y=data$D[42:164], x=data$time[42:164])
+##  L,components ~ sample size  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(CIrange ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="C.I. range", xlab=expression(paste(italic(n))))
+plot(abs(results$res$skew) ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="Skew", xlab=expression(paste(italic(n))))
+plot(results$res$b1.ac ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1~acorr])), xlab=expression(paste(italic(n))))
 
-acorr <- acf(Breg$stdResid, lag.max=(length(Breg$stdResid)-1))$acf
-as.vector(acorr)
-lm(acorr ~ seq(0,1,len=length(acorr)))
+##  Correlations among L components  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(abs(results$res$skew) ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="|Skew|")
+plot(abs(results$res$skew) ~ CIrange, pch=21, bg=col2, col=NA,
+     xlab="C.I. range", ylab="|Skew|")
+plot(CIrange ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="C.I. range")
+
 
 
 #########################################################
@@ -108,10 +131,59 @@ results
 
 PlotBest(res=results, yall=data$Vo2..ml.min., xall=data$Time..h., best=1)
 
-Breg <- doRegCI(y=data$Vo2..ml.min.[197:354], x=data$Time..h.[197:354])
 
-acorr <- acf(Breg$stdResid, lag.max=(length(Breg$stdResid)-1))$acf
-lm(acorr ~ seq(1:length(acorr)))
+
+##  Using all=TRUE to examine distributions of L  ##
+##   and relations b/w different parts of metric  ##
+results  <-  FindLocLin(yall=data$Vo2..ml.min., xall=data$Time..h., alpha=0.3, ref.b1 = FALSE,
+                        plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
+
+xrange <- (results$res$Rbound - results$res$Lbound)
+CIrange <- results$res$b1.CI.hi - results$res$b1.CI.lo
+
+##  Density plots of Metric components  ##
+par(mfrow=c(2,3), cex.lab=1.5)
+plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+plot(density(results$res$skew), lwd=4, col=col1, xlab=expression(paste(italic(Skew))),
+     main=expression(paste("Distribution of Skew")), cex.main=2)
+plot(density(results$res$b1.ac), lwd=4, col=col1, xlab=expression(paste(beta[1~acorr])),
+     main=expression(paste("Distribution of ", beta[1~acorr])), cex.main=2)
+plot(density(CIrange), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of C.I. range")), cex.main=2)
+
+##  L ~ component parts  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ CIrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="C.I. range")
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="Skew")
+plot(results$res$L ~  results$res$b1.ac, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(beta[1~acorr])))
+
+##  L,components ~ sample size  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(CIrange ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="C.I. range", xlab=expression(paste(italic(n))))
+plot(abs(results$res$skew) ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="Skew", xlab=expression(paste(italic(n))))
+plot(results$res$b1.ac ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1~acorr])), xlab=expression(paste(italic(n))))
+
+##  Correlations among L components  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(abs(results$res$skew) ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="|Skew|")
+plot(abs(results$res$skew) ~ CIrange, pch=21, bg=col2, col=NA,
+     xlab="C.I. range", ylab="|Skew|")
+plot(CIrange ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="C.I. range")
+
+
 
 
 ###################################
@@ -135,6 +207,56 @@ PlotBest(res=res2, yall=data$Fo2, xall= data$Time..s., best=1)
 
 
 
+##  Using all=TRUE to examine distributions of L  ##
+##   and relations b/w different parts of metric  ##
+results  <-  FindLocLin(yall=data$Fo2, xall= data$Time..s., alpha=0.3, ref.b1 = FALSE,
+                        plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
+
+xrange <- (results$res$Rbound - results$res$Lbound)
+CIrange <- results$res$b1.CI.hi - results$res$b1.CI.lo
+
+##  Density plots of Metric components  ##
+par(mfrow=c(2,3), cex.lab=1.5)
+plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+plot(density(results$res$skew), lwd=4, col=col1, xlab=expression(paste(italic(Skew))),
+     main=expression(paste("Distribution of Skew")), cex.main=2)
+plot(density(results$res$b1.ac), lwd=4, col=col1, xlab=expression(paste(beta[1~acorr])),
+     main=expression(paste("Distribution of ", beta[1~acorr])), cex.main=2)
+plot(density(CIrange), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of C.I. range")), cex.main=2)
+
+##  L ~ component parts  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ CIrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="C.I. range")
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="Skew")
+plot(results$res$L ~  results$res$b1.ac, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(beta[1~acorr])))
+
+##  L,components ~ sample size  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(CIrange ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="C.I. range", xlab=expression(paste(italic(n))))
+plot(abs(results$res$skew) ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="Skew", xlab=expression(paste(italic(n))))
+plot(results$res$b1.ac ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1~acorr])), xlab=expression(paste(italic(n))))
+
+##  Correlations among L components  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(abs(results$res$skew) ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="|Skew|")
+plot(abs(results$res$skew) ~ CIrange, pch=21, bg=col2, col=NA,
+     xlab="C.I. range", ylab="|Skew|")
+plot(CIrange ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="C.I. range")
+
 
 
 ########################################
@@ -157,6 +279,59 @@ PlotBest(res=res2, yall=data$X.CO2..ppm , xall= data$Time..s., best=1)
 
 
 
+
+
+
+##  Using all=TRUE to examine distributions of L  ##
+##   and relations b/w different parts of metric  ##
+results  <-  FindLocLin(yall=data$X.CO2..ppm, xall=data$Time..s., alpha=0.3, ref.b1 = 0.0,
+                        plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
+PlotBest(res=results, yall=data$X.CO2..ppm , xall= data$Time..s., best=1)
+
+xrange <- (results$res$Rbound - results$res$Lbound)
+CIrange <- results$res$b1.CI.hi - results$res$b1.CI.lo
+
+##  Density plots of Metric components  ##
+par(mfrow=c(2,3), cex.lab=1.5)
+plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+plot(density(results$res$skew), lwd=4, col=col1, xlab=expression(paste(italic(Skew))),
+     main=expression(paste("Distribution of Skew")), cex.main=2)
+plot(density(results$res$b1.ac), lwd=4, col=col1, xlab=expression(paste(beta[1~acorr])),
+     main=expression(paste("Distribution of ", beta[1~acorr])), cex.main=2)
+plot(density(CIrange), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of C.I. range")), cex.main=2)
+
+##  L ~ component parts  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ CIrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="C.I. range")
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="Skew")
+plot(results$res$L ~  results$res$b1.ac, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(beta[1~acorr])))
+
+##  L,components ~ sample size  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(CIrange ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="C.I. range", xlab=expression(paste(italic(n))))
+plot(abs(results$res$skew) ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="Skew", xlab=expression(paste(italic(n))))
+plot(results$res$b1.ac ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1~acorr])), xlab=expression(paste(italic(n))))
+
+##  Correlations among L components  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(abs(results$res$skew) ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="|Skew|")
+plot(abs(results$res$skew) ~ CIrange, pch=21, bg=col2, col=NA,
+     xlab="C.I. range", ylab="|Skew|")
+plot(CIrange ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="C.I. range")
 
 
 
@@ -188,5 +363,64 @@ res2  <-  FindLocLin(yall=lg$l, xall=lg$x, alpha=0.2, ref.b1 = FALSE,
 res2
 
 
-PlotBest(res=res, yall=lg$l, xall=lg$x, best=1)
+PlotBest(res=res1, yall=lg$l, xall=lg$x, best=1)
 PlotBest(res=res2, yall=lg$l, xall=lg$x, best=1)
+
+
+
+
+
+##  Using all=TRUE to examine distributions of L  ##
+##   and relations b/w different parts of metric  ##
+results  <-  FindLocLin(yall=lg$l, xall=lg$x, alpha=0.3, ref.b1 = 0.5,
+                        plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
+
+xrange <- (results$res$Rbound - results$res$Lbound)
+CIrange <- results$res$b1.CI.hi - results$res$b1.CI.lo
+
+##  Density plots of Metric components  ##
+par(mfrow=c(2,3), cex.lab=1.5)
+plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+plot(density(results$res$skew), lwd=4, col=col1, xlab=expression(paste(italic(Skew))),
+     main=expression(paste("Distribution of Skew")), cex.main=2)
+plot(density(results$res$b1.ac), lwd=4, col=col1, xlab=expression(paste(beta[1~acorr])),
+     main=expression(paste("Distribution of ", beta[1~acorr])), cex.main=2)
+plot(density(CIrange), lwd=4, col=col1, xlab=expression(paste(italic(L))),
+     main=expression(paste("Distribution of C.I. range")), cex.main=2)
+
+##  L ~ component parts  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ CIrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="C.I. range")
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab="Skew")
+plot(results$res$L ~  results$res$b1.ac, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(beta[1~acorr])))
+
+##  L,components ~ sample size  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(CIrange ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="C.I. range", xlab=expression(paste(italic(n))))
+plot(abs(results$res$skew) ~ xrange, pch=21, bg=col2, col=NA,
+     ylab="Skew", xlab=expression(paste(italic(n))))
+plot(results$res$b1.ac ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1~acorr])), xlab=expression(paste(italic(n))))
+
+##  Correlations among L components  ##
+par(mfrow=c(2,2), cex.lab=1.5)
+plot(abs(results$res$skew) ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="|Skew|")
+plot(abs(results$res$skew) ~ CIrange, pch=21, bg=col2, col=NA,
+     xlab="C.I. range", ylab="|Skew|")
+plot(CIrange ~ results$res$b1.ac, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(beta[1~acorr])), ylab="C.I. range")
+
+
+
+
+
