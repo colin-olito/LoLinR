@@ -159,14 +159,8 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
-        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
         BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg          <-  as.numeric(BGtest$statistic)
-        bg.p        <-  as.numeric(BGtest$p.value)
         bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
-        bg.diff     <-  as.numeric(BGtest$statistic) - qchisq(0.5, df=BGtest$parameter)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -174,14 +168,8 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
-        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
         BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg          <-  as.numeric(BGtest$statistic)
-        bg.p        <-  as.numeric(BGtest$p.value)
         bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
-        bg.diff     <-  as.numeric(BGtest$statistic) - qchisq(0.5, df=BGtest$parameter)
     }
     data.frame(
         weights  =  weights,
@@ -192,12 +180,8 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         b1       =  bHat[2],
         b1.CI.lo =  b1.CI[1],
         b1.CI.hi =  b1.CI[2],
-        b1.ac    =  b1.ac[2],
-        bg       =  bg, 
-        bg.p     =  bg.p,
-        bg.df    =  bg.df,
-        bg.diff  =  bg.diff,
-        skew     =  Skew(x = stdResid)
+        skew     =  Skew(x = stdResid),
+        bg.df    =  bg.df
     )
 }
 
@@ -214,23 +198,24 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE,
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     res$CI.range <- res$b1.CI.hi - res$b1.CI.lo
+    res  <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1.CI.lo', 'b1.CI.hi', 'CI.range', 'skew', 'bg.df')]
     res$L <-  ((min(abs(res$skew)) + abs(res$skew)) /sd(res$skew)) +
-#              ((res$bg - min(res$bg)) / sd(res$bg)) +
-              ((max(res$bg.p) - res$bg.p) / sd(res$bg.p)) +
+              ((max(res$bg.df) - res$bg.df) / sd(res$bg.df)) +
               ((res$CI.range - min(res$CI.range)) / sd(res$CI.range))
     res$L.pc <-  ((pc.rank(abs(res$skew))) +
-#                 (pc.rank(res$bg)) +
                  (pc.rank((max(res$bg.p) - res$bg.p))) +
                  (pc.rank((res$CI.range)))) / 3
     nFits <- print(nrow(res))
     res <- data.frame(cbind(nFits,res))
-    if(is.numeric(ref.b1)) {
+    
+    numericB1  <-  is.numeric(ref.b1)
+    if(numericB1) {
         res   <- res[with(res, order(L.pc)), ]
         res   <- res[with(res, order(abs(ref.b1 - res$b1))), ]
     } else {
         res   <-  res[with(res, order(L.pc)), ]
     }
-    if(all == FALSE) {
+    if(!all) {
         res <- res[1:25,]
     }
     #  Plots to accompany best results  #
@@ -238,6 +223,7 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE,
         toPdf(outputPlot(res, xall, yall), filename=plot.name, height=15, width=15)
     }    
     list(
+        'weights'   =  weights,
         'nFits'   =  nFits,
         'res'     =  res
         )
