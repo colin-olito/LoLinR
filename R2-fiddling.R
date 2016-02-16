@@ -52,6 +52,10 @@ doRegCI <- function(y, x) {
     r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
     r2adj       <-  r2 - (1 - r2) * (2/(length(x) - 2 - 1))
     skew        <-  Skew(stdResid) 
+    bg          <- as.numeric(bgtest(y ~ x, order=(length(x)-2))$statistic)
+    acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
+    Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
+    b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
     list(
         'y'          = y,
         'x'          = x,
@@ -64,7 +68,9 @@ doRegCI <- function(y, x) {
         'stdResid'   = stdResid,
         'r2'         = r2,
         'r2adj'      = r2adj,
-        'skew'       = skew
+        'skew'       = skew,
+        'bg'         = bg,
+        'b1.ac'      = b1.ac
     )
 }
 
@@ -79,6 +85,37 @@ summary(lm1)
 confint(lm1)
 RegCI1$b1.CI
 RegCI1$CIrange
+RegCI1$b1.ac
+
+test <- bgtest(lm1, order=(length(data$x) - 3), type="F")
+test$statistic
+str(test)test$parameter
+
+order = 1:5
+resi <- lm1$resid
+fill=0
+n <- length(resi)
+
+Z <- sapply(order, function(x) c(rep(fill, length.out = x), resi[1:(n-x)]))
+Z <- Z[!na, , drop = FALSE]
+X <- model.matrix(lm1)
+cbind(X,Z)
+lm.fit(cbind(X,Z),resi)
+(acf(resi))
+
+
+if(any(na <- !complete.cases(Z))) {
+    X <- X[!na, , drop = FALSE]
+    Z <- Z[!na, , drop = FALSE]
+    y <- y[!na]
+    resi <- resi[!na]
+    n <- nrow(X)
+  }
+
+
+
+
+
 
 
 
@@ -92,27 +129,38 @@ spectrum(data$y)
 plot(RegCI1$r2adj ~ RegCI1$CIrange)
 
 
-plot(data$D ~ data$time)
-mod <- lm(data$D ~ data$time)
-plot(mod)
-acf(mod$res, lag.max=100)
+##  SIMULATIONS EXAMINING THE RELATION BETWEEN b.ac AND THE BREUSCH-GODFREY STATISTIC  ##
+col1 <- adjustcolor('#1B6889', alpha=0.5)
 
-acf
+par(mfrow=c(2,2))
+bac <- c()
+bg <- c()
+for (i in 1:100) {
+    testdat <- makedata(n=200, b1 = -5, sd.x = 2, sd.e = 1)
+    x1 <- rep(c(1, -1), 50)
+    y1 <- 1 + x1 + rnorm(100)
+#    reg <- doRegCI(testdat$y, testdat$x)
+    reg <- doRegCI(y1, x1)
+    bac[i] <- reg$b1.ac[2,]
+    bg[i]    <- reg$bg
+}
+
+plot(density(bac),lwd=4, col=col1)
+plot(density(bg),lwd=4, col=col1)
+plot(bac ~ bg, pch=21, col=NA, bg=col1)
+
+?bgtest
+
+plot(0, pch=21, bg='grey80')
+points(radj, pch=21, bg='red')
+hist(r, breaks=40)
+plot(testdat$y ~ testdat$x, pch=21, bg="grey80")
 
 
-(solve(t(X) %*% X))
-        
-H <- X %*% (solve(t(X) %*% X)) %*% t(X)
-SSE <- (t(y) %*% (diag(nrow(X)) - H) %*% y)/(nrow(X) - 2)
-
-l <- X[,1]
-M <- l %*% (solve(t(l) %*% l)) %*% t(l)
-MSE <- (t(y) %*% (diag(nrow(X)) - M) %*% y)/(nrow(X) - 1)
-
-1 - SSE/MSE
 
 
-(solve(t(X) %*% X))
+ y1 <- 1 + x + rnorm(100)
+
 
 
 col1 <- adjustcolor('blue', alpha=0.2)

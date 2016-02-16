@@ -4,7 +4,7 @@
 #
 #  Run these functions
 
-
+library(lmtest)
 
 ################################################################
 #  Dependency -- Function TriCube():
@@ -16,6 +16,13 @@ TriCube <-  function(x, m, h) {
     z  <-  abs(x - m) / h
     ifelse(z < 1, (1 - z^3)^3, 0)
 }
+
+################################################################
+#  Dependency -- perc.rank():
+#
+# perc.rank() is a function to calculate the percentile vlaues of a vector x.
+pc.rank <- function(x) trunc(rank(x,na.last = NA))/sum(!is.na(x))
+
 
 
 ################################################################
@@ -152,11 +159,14 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
         Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
         b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
+        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
+        bg          <-  as.numeric(BGtest$statistic)
+        bg.p        <-  as.numeric(BGtest$p.value)
+        bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
+        bg.diff     <-  as.numeric(BGtest$statistic) - qchisq(0.5, df=BGtest$parameter)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -164,58 +174,72 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
         Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
+        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
+        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
+        bg          <-  as.numeric(BGtest$statistic)
+        bg.p        <-  as.numeric(BGtest$p.value)
+        bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
+        bg.diff     <-  as.numeric(BGtest$statistic) - qchisq(0.5, df=BGtest$parameter)
     }
     data.frame(
-        weights  = weights,
-        Lbound   = wins[1],
-        Rbound   = wins[2],
-#        r2       =  r2adj,
+        weights  =  weights,
+        Lbound   =  wins[1],
+        Rbound   =  wins[2],
         alph     =  length(wins[1]:wins[2])/length(yall),
         b0       =  bHat[1],
         b1       =  bHat[2],
         b1.CI.lo =  b1.CI[1],
         b1.CI.hi =  b1.CI[2],
         b1.ac    =  b1.ac[2],
+        bg       =  bg, 
+        bg.p     =  bg.p,
+        bg.df    =  bg.df,
+        bg.diff  =  bg.diff,
         skew     =  Skew(x = stdResid)
     )
 }
 
 
 ################################################################
-FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, plots=TRUE, all=FALSE, ...) {
+#  THE MAIN WRAPPER FUNCTION -- FindLocLin():
+#############
+FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE,
+                         plots=TRUE, plot.name="testPlots.pdf.", all=FALSE, ...) {
     #  Get windows # 
     wins  <-  GetWindows(y = yall, alpha)
     #  Fit Local Regressions  #
     res   <-  apply(wins, 1, LocReg, xall=xall, yall=yall)
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
-    CI.range <- res$b1.CI.hi - res$b1.CI.lo
-    res$L <-  ((min(abs(res$skew)) + abs(res$skew))/sd(res$skew)) +
-              ((min(abs(res$b1.ac)) + abs(res$b1.ac))/sd(res$b1.ac)) +
-              (min(CI.range) + CI.range)/sd(CI.range)
+    res$CI.range <- res$b1.CI.hi - res$b1.CI.lo
+    res$L <-  ((min(abs(res$skew)) + abs(res$skew)) /sd(res$skew)) +
+#              ((res$bg - min(res$bg)) / sd(res$bg)) +
+              ((max(res$bg.p) - res$bg.p) / sd(res$bg.p)) +
+              ((res$CI.range - min(res$CI.range)) / sd(res$CI.range))
+    res$L.pc <-  ((pc.rank(abs(res$skew))) +
+#                 (pc.rank(res$bg)) +
+                 (pc.rank((max(res$bg.p) - res$bg.p))) +
+                 (pc.rank((res$CI.range)))) / 3
     nFits <- print(nrow(res))
+    res <- data.frame(cbind(nFits,res))
     if(is.numeric(ref.b1)) {
-        res   <- res[with(res, order(L)), ]
+        res   <- res[with(res, order(L.pc)), ]
         res   <- res[with(res, order(abs(ref.b1 - res$b1))), ]
     } else {
-        res   <-  res[with(res, order(L)), ]
+        res   <-  res[with(res, order(L.pc)), ]
     }
     if(all == FALSE) {
         res <- res[1:25,]
     }
     #  Plots to accompany best results  #
     if(plots) {        
-        toPdf(outputPlot(res, xall, yall), 'testPlots.pdf', height=15, width=15)
-        toPdf(outputHist(res), 'testHist.pdf', height=7, width=7)
+        toPdf(outputPlot(res, xall, yall), filename=plot.name, height=15, width=15)
     }    
     list(
-        'nFits'   = nFits,
-        'res'     = res
+        'nFits'   =  nFits,
+        'res'     =  res
         )
 }
 
@@ -261,7 +285,7 @@ outputHist  <-  function(resultsTable) {
 #  Dependency -- BestLocReg():
 ##############################
 # for use with PlotBest() -- slight modification of LocReg, that
-#  accepts the best window chosen by the userinstead of subsetting
+#  accepts the best window chosen by the user instead of subsetting
 #  the dataset. Also uses a list() to output objects of different
 #  length (e.g. bHat and stdResid).
 
@@ -276,12 +300,11 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-#        r2adj       <-  r2 - (1 - r2) * (2/(length(x) - 2 - 1))
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
         Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
-        skew        <-  Skew(x = stdResid)
+        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
+        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
+        bg          <-  as.numeric(BGtest$statistic) / as.numeric(BGtest$parameter)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -289,24 +312,23 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-#        r2          <-  1 - ((sum((y - yHat)^2)) / (sum((y - mean(y))^2)))
-#        r2adj       <- r2 - (1 - r2) * (2/(length(x) - 2 - 1))
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf)
+        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
         Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac        <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
-        skew     =  Skew(x = stdResid)
+        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
+        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
+        bg          <-  as.numeric(BGtest$statistic) / as.numeric(BGtest$parameter)
     }
     list(
-        'BestWindow' = bestwin,
+        'BestWindow' =  bestwin,
         'bHat'       =  bHat,
-        'yHat'       = yHat,
-        'sigmaHatUb' = sigmaHatUb,
-        'stdResid'   = stdResid,
-        'b1.CI'      = b1.CI,
- #       'r2'         =  r2adj,
-        'b1.ac'       =  b1.ac,
-        'skew'       =  skew,
-        'weights'    =  weights)
+        'yHat'       =  yHat,
+        'sigmaHatUb' =  sigmaHatUb,
+        'stdResid'   =  stdResid,
+        'b1.CI'      =  b1.CI,
+        'b1.ac'      =  b1.ac,
+        'bg'         =  bg,
+        'skew'       =  Skew(x = stdResid)
+    )
 }
 
 
@@ -331,12 +353,13 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
 
 PlotBest <- function(res, yall, xall, best=1) {
     #  Recover data window for chosen local regression model  #
-    weight=res$res$weights[best]
+    weight=res$res$weights[1]
     bestwin <- c(res$res$Lbound[best],res$res$Rbound[best])
     y       <- yall[bestwin[1]:bestwin[2]]
     x       <- xall[bestwin[1]:bestwin[2]]
     #  Fit block  #
     LocFit <- BestLocReg(bestwin, y=y, x=x, weight)
+    b1 <- as.numeric(LocFit$bHat[2,1])
     
     #  Residual Plots  #
     dev.new()
@@ -345,12 +368,14 @@ PlotBest <- function(res, yall, xall, best=1) {
     plot(LocFit$stdResid ~ x,
          xlab="x", ylab="y", main="Std. Residuals ~ x")
     abline(h=0,col=1, lwd=2)
+    abline(h=c(-2,2), lty=2)
     lf1 <- loess(LocFit$stdResid ~ x)
     points(x, lf1$fitted, type='l', col=2, lwd=2)
     # Standardized Residuals ~ Fitted Values
     plot(LocFit$stdResid ~ LocFit$yHat,
          xlab="Fitted Values",ylab="Standardized Residuals",main="Std. Residuals ~ Fitted Values")
     abline(h=0,col=1, lwd=2)
+    abline(h=c(-2,2), lty=2)
     lf2 <- loess(LocFit$stdResid ~ LocFit$yHat)
     points(LocFit$yHat, lf2$fitted, type='l', col=2, lwd=2)
     # QQNorm Plot of Standardized Residuals #
@@ -363,8 +388,7 @@ PlotBest <- function(res, yall, xall, best=1) {
     dev.new()
     col1 <- adjustcolor('#1B6889', alpha=0.5)
     plot(yall ~ xall, pch=21, col='grey80', ask=TRUE,
-         main=expression(paste("Best Local Regression: ",beta[o], " = ", LocFit$bHat[1,1], " ",
-                               beta[1]," = ", LocFit$bHat[2,1])))
+         main=expression(paste("Best Local Regression: ", beta[1]," = ", b1)))
     points(y ~ x, pch=21, bg=col1, ask=TRUE)
     abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)    
 }
