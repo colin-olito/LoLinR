@@ -2,9 +2,9 @@ rm(list=ls())
 source('R/functions.R')
 col1 <- adjustcolor('#1B6889', alpha=0.5)
 col2 <- adjustcolor('#1B6889', alpha=0.2)
-
-col1 <- adjustcolor('dodgerblue', alpha=0.5)
-col2 <- adjustcolor('dodgerblue', alpha=0.2)
+library(extrafont)
+#col1 <- adjustcolor('dodgerblue', alpha=0.5)
+#col2 <- adjustcolor('dodgerblue', alpha=0.2)
 
 
 
@@ -15,39 +15,31 @@ col2 <- adjustcolor('dodgerblue', alpha=0.2)
 # Import test VO2 data #
 data     <-  read.csv("data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE)
 
-##  Test new ref.b1 option  ##
-results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, ref.b1 = FALSE,
-                        plots=TRUE, plot.name="Lpercentile.pdf", weights=FALSE, all=FALSE, verbose=TRUE)
-results
-
-
-
-
-
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relation b/w different parts of metric  ##
-results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, ref.b1 = FALSE,
+results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, method="sr", ref.b1 = FALSE,
                         plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
 #toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1), filename='BG.Lpc.pdf')
 PlotBest(res=results, yall=data$D, xall=data$time, best=1)
-
+head(results$res)
 
 xrange <- (results$res$Rbound - results$res$Lbound)
 
 ## Component Metrics  ##
-L.skew <- ((min(abs(results$res$skew)) + abs(results$res$skew)) /sd(results$res$skew))
-L.CI   <- ((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range))
-L.BG   <- ((results$res$bg - min(results$res$bg)) / sd(results$res$bg))
-L.BGp   <- ((max(results$res$bg.p) - results$res$bg.p) / sd(results$res$bg.p))
-L.BG.df   <- ((results$res$bg.df - min(results$res$bg.df)) / sd(results$res$bg.df))
-L.BG.diff   <- (abs(results$res$bg.diff / sd(results$res$bg.diff)))
-L.BG.diff   <- (abs(results$res$bg.diff))
+L.skew  <-  ((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew))
+L.CI    <- ((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range))
+L.BG    <- ((results$res$bg.df - min(results$res$bg.df)) / sd(results$res$bg.df))
+
+L.skew.sr  <-  (((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)) /
+                (max(((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)))))
+L.CI.sr    <- (((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range))/
+               (max(((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range)))))
+L.BG.sr    <- (((results$res$bg.df - min(results$res$bg.df)) / sd(results$res$bg.df)) /
+               (max(((results$res$bg.df - min(results$res$bg.df))/ sd(results$res$bg.df)))))
 
 L.skew.pc <- pc.rank(abs(results$res$skew))
-L.CI.pc   <- pc.rank(results$res$bg)
-L.BG.pc   <- pc.rank(results$res$CI.range)
-L.BGp.pc   <- pc.rank(max(results$res$bg.p) - results$res$bg.p)
-L.BGdf.pc   <- pc.rank(results$res$bg.df - min(results$res$bg.df))
+L.CI.pc <- (pc.rank((results$res$CI.range)))
+L.BG.pc <- (pc.rank((results$res$bg.df - min(results$res$bg.df))))
 
 
 
@@ -56,32 +48,40 @@ par(mfrow=c(2,3))
 hist(L.skew, breaks=50)
 hist(L.CI, breaks=50)
 hist(L.BG, breaks=50)
-hist(L.BGp, breaks=50)
-hist(L.BG.df, breaks=50)
-hist(L.BG.diff, breaks=50)
+hist(L.skew.sr, breaks=50)
+hist(L.CI.sr, breaks=50)
+hist(L.BG.sr, breaks=50)
 
-par(mfrow=c(2,3))
+
+##  Effects of different standardizations on each component metric  ##
+
+par(mfrow=c(3,3))
+plot(L.skew ~ L.skew.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(Skew))), xlab=expression(paste(italic(Skew[sr]))))
+plot(L.skew.pc ~ L.skew, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(Skew["%"]))),xlab=expression(paste(italic(Skew))))
+plot(L.skew.pc ~ L.skew.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG["%"]))), xlab=expression(paste(italic(BG[sr]))))
+plot(L.BG ~ L.BG.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG))), xlab=expression(paste(italic(BG[sr]))))
 plot(L.BG.pc ~ L.BG, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG["%"]))), xlab=expression(paste(italic(BG))))
-plot(L.BGp ~ L.BG, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG[p]))), xlab=expression(paste(italic(BG))))
-plot(L.BGp.pc ~ L.BG, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG[p~"%"]))), xlab=expression(paste(italic(BG))))
-
-plot(L.BG ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG))), xlab=expression(paste(italic(Sample~Size))))
-plot(L.BG.pc ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG["%"]))), xlab=expression(paste(italic(Sample~Size))))
-plot(L.BGp ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG[p]))), xlab=expression(paste(italic(Sample~Size))))
-plot(L.BGp.pc ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG[p~"%"]))), xlab=expression(paste(italic(Sample~Size))))
+     ylab=expression(paste(italic(BG["%"]))),xlab=expression(paste(italic(BG))))
+plot(L.BG.pc ~ L.BG.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG["%"]))), xlab=expression(paste(italic(BG[sr]))))
+plot(L.CI ~ L.CI.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(CI))), xlab=expression(paste(italic(CI[sr]))))
+plot(L.CI.pc ~ L.CI, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG["%"]))),xlab=expression(paste(italic(CI))))
+plot(L.CI.pc ~ L.CI.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(CI["%"]))), xlab=expression(paste(italic(CI[sr]))))
 
 
 ##  Density plots of Metric components  ##
-par(mfrow=c(3,3), cex.lab=1.5)
+par(mfrow=c(3,4), cex.lab=1.5)
 plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
      main=expression(paste("Distribution of ", italic(L))), cex.main=2)
+plot(density(results$res$L.sr), lwd=4, col=col1, xlab=expression(paste(italic(L[sr]))),
+     main=expression(paste("Distribution of ", italic(L[sr]))), cex.main=2)
 plot(density(results$res$L.pc), lwd=4, col=col1, xlab=expression(paste(italic(L["%"]))),
      main=expression(paste("Distribution of ", italic(L["%"]))), cex.main=2)
 plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
@@ -92,66 +92,145 @@ plot(density(L.CI), lwd=4, col=col1, xlab=expression(paste(italic(C.I.~range))),
      main=expression(paste("Distribution of C.I. range")), cex.main=2)
 plot(density(L.BG), lwd=4, col=col1, xlab=expression(paste(BG)),
      main=expression(paste("Distribution of ", BG)), cex.main=2)
-plot(density(L.BGp), lwd=4, col=col1, xlab=expression(paste(BG)),
-     main=expression(paste("Distribution of ", BG[p])), cex.main=2)
+plot(NA)
+plot(density(L.skew.sr), lwd=4, col=col1, xlab=expression(paste(italic(Skew[sr]))),
+     main=expression(paste("Distribution of ", Skew[sr])), cex.main=2)
+plot(density(L.CI.sr), lwd=4, col=col1, xlab=expression(paste(italic(C.I.~range[sr]))),
+     main=expression(paste("Distribution of C.I. ",range[sr])), cex.main=2)
+plot(density(L.BG.sr), lwd=4, col=col1, xlab=expression(paste(BG[sr])),
+     main=expression(paste("Distribution of ", BG[sr])), cex.main=2)
 
 
 
 ##  L ~ component parts  ##
-par(mfrow=c(2,3), cex.lab=1.5)
-plot(results$res$L.pc ~ L.CI, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L))), xlab="C.I. range")
-plot(results$res$L.pc ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L))), xlab="Skew")
-plot(results$res$L.pc ~  L.BGp, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L))), xlab=expression(paste(BG[p])))
+par(mfrow=c(3,3), cex.lab=1.5)
+plot(results$res$L ~ L.CI, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(C.I.~range))))
+plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(italic(Skew))))
+plot(results$res$L ~  L.BG, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L))), xlab=expression(paste(BG)))
+plot(results$res$L.sr ~ L.CI.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L[sr]))), xlab=expression(paste(italic(C.I.~range[sr]))))
+plot(results$res$L.sr ~  L.skew.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L[sr]))), xlab=expression(paste(italic(C.I.[sr]))))
+plot(results$res$L.sr ~  L.BG.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L[sr]))), xlab=expression(paste(BG[sr])))
 plot(results$res$L.pc ~ L.CI.pc, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L["%"]))), xlab="C.I. range")
+     ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(C.I.~range["%"]))))
 plot(results$res$L.pc ~  L.skew.pc, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L["%"]))), xlab="Skew")
-plot(results$res$L.pc ~  L.BGp.pc, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(BG[p])))
+     ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(Skew["%"]))))
+plot(results$res$L.pc ~  L.BG.pc, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(BG["%"])))
+
 
 
 ##  L,components ~ sample size  ##
 par(mfrow=c(2,3), cex.lab=1.5)
 plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
+plot(results$res$L.sr ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(L[sr]))), xlab=expression(paste(italic(n))))
 plot(results$res$L.pc ~ xrange, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(n))))
-plot(L.CI ~ xrange, pch=21, bg=col2, col=NA,
-     ylab="C.I. range", xlab=expression(paste(italic(n))))
+
+par(mfrow=c(3,3), cex.lab=1.5)
 plot(L.skew ~ xrange, pch=21, bg=col2, col=NA,
-     ylab="Skew", xlab=expression(paste(italic(n))))
+     ylab=expression(paste(italic(Skew))), xlab=expression(paste(italic(n))))
+plot(L.CI ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(C.I.~range))), xlab=expression(paste(italic(n))))
 plot(L.BG ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(BG)), xlab=expression(paste(italic(n))))
-plot(L.BGp ~ xrange, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(BG[p])), xlab=expression(paste(italic(n))))
+     ylab=expression(paste(italic(BG))), xlab=expression(paste(italic(n))))
+plot(L.skew.sr ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(Skew[sr]))), xlab=expression(paste(italic(n))))
+plot(L.CI.sr ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(C.I.~range[sr]))), xlab=expression(paste(italic(n))))
+plot(L.BG.sr ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG[sr]))), xlab=expression(paste(italic(n))))
+plot(L.skew.pc ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(Skew["%"]))), xlab=expression(paste(italic(n))))
+plot(L.CI.pc ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(C.I.~range["%"]))), xlab=expression(paste(italic(n))))
+plot(L.BG.pc ~ xrange, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG["%"]))), xlab=expression(paste(italic(n))))
+
+
 
 ##  Correlations among L components  ##
-par(mfrow=c(2,2), cex.lab=1.5)
+par(mfrow=c(3,3), cex.lab=1.5)
 plot(L.skew ~ L.BG, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG)), ylab="|Skew|")
+     xlab=expression(paste(BG)), ylab=expression(paste(Skew)))
 plot(L.skew ~ L.CI, pch=21, bg=col2, col=NA,
-     xlab="C.I. range", ylab="|Skew|")
-plot(L.CI ~ L.BG, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG)), ylab="C.I. range")
-
-par(mfrow=c(2,2))
-plot(L.skew ~ L.BGp, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG[p])), ylab="|Skew|")
-plot(L.skew ~ L.CI, pch=21, bg=col2, col=NA,
-     xlab="C.I. range", ylab="|Skew|")
-plot(L.CI ~ L.BGp, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG[p])), ylab="C.I. range")
-
-par(mfrow=c(2,2))
+     xlab=expression(paste(C.I.~range)), ylab=expression(paste(Skew)))
+plot(L.CICorrelations among L components  ~ L.BG, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(BG)), ylab=expression(paste(C.I.~range)))
+plot(L.skew.sr ~ L.BG.sr, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(BG[sr])), ylab=expression(paste(Skew[sr])))
+plot(L.skew.sr ~ L.CI.sr, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(C.I.~range[sr])), ylab=expression(paste(Skew[sr])))
+plot(L.CI.sr ~ L.BG.sr, pch=21, bg=col2, col=NA,
+     xlab=expression(paste(BG[sr])), ylab=expression(paste(C.I.~range[sr])))
 plot(L.skew.pc ~ L.BG.pc, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG)), ylab="|Skew|")
+     xlab=expression(paste(BG["%"])), ylab=expression(paste(Skew["%"])))
 plot(L.skew.pc ~ L.CI.pc, pch=21, bg=col2, col=NA,
-     xlab="C.I. range", ylab="|Skew|")
+     xlab=expression(paste(C.I.~range["%"])), ylab=expression(paste(Skew["%"])))
 plot(L.CI.pc ~ L.BG.pc, pch=21, bg=col2, col=NA,
-     xlab=expression(paste(BG)), ylab="C.I. range")
+     xlab=expression(paste(BG["%"])), ylab=expression(paste(C.I.~range["%"])))
+
+
+
+
+##  Beta[1] as a function of L, components ##
+par(mfrow=c(1,3), cex.lab=1.5)
+plot(results$res$b1 ~ results$res$L, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(L)))
+plot(results$res$b1 ~ results$res$L.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(L[sr])))
+plot(results$res$b1 ~ results$res$L.pc, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(L["%"])))
+
+par(mfrow=c(3,3), cex.lab=1.5)
+plot(results$res$b1 ~ L.skew, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(Skew)))
+plot(results$res$b1 ~ L.CI, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(C.I.~range)))
+plot(results$res$b1 ~ L.BG, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(BG)))
+plot(results$res$b1 ~ L.skew.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(Skew[sr])))
+plot(results$res$b1 ~ L.CI.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(C.I.~range[sr])))
+plot(results$res$b1 ~ L.BG.sr, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(BG[sr])))
+plot(results$res$b1 ~ L.skew.pc, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(Skew["%"])))
+plot(results$res$b1 ~ L.CI.pc, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(C.I.~range["%"])))
+plot(results$res$b1 ~ L.BG.pc, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(beta[1])), xlab=expression(paste(BG["%"])))
+
+c1 <- adjustcolor('#A67A01', alpha=0.75)
+c2 <- adjustcolor('#6D65FA', alpha=0.75)
+c3 <- adjustcolor('#B6084E', alpha=0.75)
+
+par(mfrow=c(1,1))
+#pdf(file="beta1.pdf", family="CM Roman", width=6, height=6)
+plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+     main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
+abline(v=results$res$b1[results$res$L.sr == min(results$res$L.sr)], col=c2, lty=2, lwd=4)
+abline(v=results$res$b1[results$res$L.pc == min(results$res$L.pc)], col=c3, lty=3, lwd=4)
+legend(x = min(results$res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
+       y = (0.95*max(density(results$res$b1)$y)),
+       legend = c(expression(paste(italic(L))),
+                  expression(paste(italic(L[sr]))),
+                  expression(paste(italic(L["%"])))),
+       lwd = 4,
+       lty = c(1,2,3),
+       col = c(c1, c2, c3),
+       cex=1)
+#dev.off()
+#embed_fonts("beta1.pdf", outfile = "beta1.pdf")
 
 
 #########################################################

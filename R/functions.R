@@ -20,7 +20,7 @@ TriCube <-  function(x, m, h) {
 ################################################################
 #  Dependency -- perc.rank():
 #
-# perc.rank() is a function to calculate the percentile vlaues of a vector x.
+# perc.rank() is a function to calculate the percentile values of a vector x.
 pc.rank <- function(x) trunc(rank(x,na.last = NA))/sum(!is.na(x))
 
 
@@ -189,7 +189,7 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
 ################################################################
 #  THE MAIN WRAPPER FUNCTION -- FindLocLin():
 #############
-FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE,
+FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, method = c("ns","sr","pc"),
                          plots=TRUE, plot.name="testPlots.pdf.", all=FALSE, ...) {
     #  Get windows # 
     wins  <-  GetWindows(y = yall, alpha)
@@ -199,31 +199,39 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE,
     #  Calculate combined metric (L) for linearity & fit  #
     res$CI.range <- res$b1.CI.hi - res$b1.CI.lo
     res  <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1.CI.lo', 'b1.CI.hi', 'CI.range', 'skew', 'bg.df')]
-    res$L <-  ((min(abs(res$skew)) + abs(res$skew)) /sd(res$skew)) +
-              ((max(res$bg.df) - res$bg.df) / sd(res$bg.df)) +
-              ((res$CI.range - min(res$CI.range)) / sd(res$CI.range))
-    res$L.pc <-  ((pc.rank(abs(res$skew))) +
-                 (pc.rank((max(res$bg.p) - res$bg.p))) +
-                 (pc.rank((res$CI.range)))) / 3
-    nFits <- print(nrow(res))
-    res <- data.frame(cbind(nFits,res))
-    
-    numericB1  <-  is.numeric(ref.b1)
-    if(numericB1) {
-        res   <- res[with(res, order(L.pc)), ]
-        res   <- res[with(res, order(abs(ref.b1 - res$b1))), ]
-    } else {
-        res   <-  res[with(res, order(L.pc)), ]
-    }
-    if(!all) {
-        res <- res[1:25,]
-    }
+    res$L     <-  ((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew)) +
+                  ((res$bg.df          - min(res$bg.df))    / sd(res$bg.df)) +
+                  ((res$CI.range       - min(res$CI.range)) / sd(res$CI.range))
+    res$L.sr  <-  (((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))     / (max(((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))))) +
+                  (((res$bg.df          - min(res$bg.df))    / sd(res$bg.df))    / (max(((res$bg.df          - min(res$bg.df))    / sd(res$bg.df))))) +
+                  (((res$CI.range       - min(res$CI.range)) / sd(res$CI.range)) / (max(((res$CI.range       - min(res$CI.range)) / sd(res$CI.range)))))
+    res$L.pc  <-  ((pc.rank(abs(res$skew))) +
+                  (pc.rank((res$bg.df - min(res$bg.df)))) +
+                  (pc.rank((res$CI.range)))) / 3
+    switch(match.arg(method),
+           "ns" = {
+               res   <- res[with(res, order(L)), ]
+          },
+           "sr" = {
+               res   <- res[with(res, order(L.sr)), ]
+           },
+           "pc" = {
+               res   <- res[with(res, order(L.pc)), ]
+           }
+          )
+          numericB1  <-  is.numeric(ref.b1)
+          if(numericB1) {
+              res   <- res[with(res, order(abs(ref.b1 - res$b1))), ]
+          } 
+          if(!all) {
+              res <- res[1:25,]
+          }
     #  Plots to accompany best results  #
     if(plots) {        
         toPdf(outputPlot(res, xall, yall), filename=plot.name, height=15, width=15)
     }    
+    nFits <- print(nrow(res))
     list(
-        'weights'   =  weights,
         'nFits'   =  nFits,
         'res'     =  res
         )
