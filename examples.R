@@ -17,8 +17,9 @@ data     <-  read.csv("data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE
 
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relation b/w different parts of metric  ##
-results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, method="sr", ref.b1 = FALSE,
-                        plots=FALSE, weights=TRUE, all=TRUE, verbose=TRUE)
+results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, method="sr", 
+                        ref.b1 = FALSE, plots=FALSE, weights=TRUE, all=TRUE, 
+                        verbose=TRUE)
 #toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1), filename='BG.Lpc.pdf')
 PlotBest(res=results, yall=data$D, xall=data$time, best=1)
 head(results$res)
@@ -26,9 +27,12 @@ head(results$res)
 xrange <- (results$res$Rbound - results$res$Lbound)
 
 ## Component Metrics  ##
-L.skew  <-  ((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew))
-L.CI    <- ((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range))
-L.BG    <- ((results$res$bg.df - min(results$res$bg.df)) / sd(results$res$bg.df))
+L.skew  <-  ((min(abs(results$res$skew)) + abs(results$res$skew)) / 
+                sd(results$res$skew))
+L.CI    <- ((results$res$CI.range - min(results$res$CI.range)) / 
+                sd(results$res$CI.range))
+L.BG    <- ((results$res$bg.df - min(results$res$bg.df)) / 
+                sd(results$res$bg.df))
 
 L.skew.sr  <-  (((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)) /
                 (max(((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)))))

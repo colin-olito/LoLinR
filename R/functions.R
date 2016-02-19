@@ -39,7 +39,7 @@ Skew  <-  function(x) {
 }
 
 ################################################################
-# Dependency -- nCm():
+# Dependency -- combn():
 ###############
 
 # NOTE: This code is copied directly from the combn() function
@@ -123,6 +123,77 @@ combn <- function (x, m, FUN = NULL, simplify = TRUE, ...)
         dim(out) <- dim.use
     }
     out
+}
+
+
+
+
+simpleReg <- function(X, y, weights = FALSE) {
+    if(!is.matrix(X))
+        stop("X must be a model matrix")
+    if(nrow(X) != length(y))
+         stop("X must be a model matrix")
+    if(weights) { # Use Weighted Least Squares Regression #
+        w           <-  TriCube(x=x, m=mean(x), h=(x[length(x)] - x[1])/2)
+        bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
+        yHat        <-  X %*% bHat
+        sigmaHatUb  <-  sum((y - yHat)^2)/(length(y) - 2)
+        vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
+        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+    } else { # Use Ordinary Least Squares Regression #
+        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
+        yHat        <-  X %*% bHat
+        sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
+        vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
+        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+    }
+    list(
+        'bHat'       =  bHat,
+        'yHat'       =  yHat,
+        'sigmaHatUb' =  sigmaHatUb,
+        'vcov'       =  vcov,
+        'stdResid'   =  stdResid
+        )
+}
+
+################################################################
+# Dependency -- BG():
+###############
+
+# NOTE: This code is copied directly from the combn() function
+#        from the R {utils} package. Not sure if this matters
+#        as a dependency (i.e. whether we should strip this
+#        function down to just what we need)... need to ask
+#        Diego...
+
+BG <- function(y, x, order = FALSE, fill=0) {
+    X  <-  matrix(cbind(1, x), ncol=2)
+    n <- nrow(X) 
+    k <- ncol(X)
+    if(order)
+        order <- 1:order
+    else order <- 1:(n-k-1)
+    m <- length(order)
+    resids <- simpleReg(X, y)$stdResid
+
+    Z <- sapply(order, function(x) c(rep(fill, length.out = x), resids[1:(n-x)]))
+        if(any(na <- !complete.cases(Z))) {
+            X <- X[!na, , drop = FALSE]
+            Z <- Z[!na, , drop = FALSE]
+            y <- y[!na]
+            resids <- resids[!na]
+            n <- nrow(X)
+        }
+    auxfit <- simpleReg(cbind(X,Z), resids)
+
+    bg <- n * sum(auxfit$yHat^2)/sum(resids^2)
+    names(bg) <- "Breusch-Godfrey Statistic / n"
+    df <- m
+    names(df) <- "df"
+    list(
+        bg  =  bg / n,
+        df  = df
+        )
 }
 
 ################################################################

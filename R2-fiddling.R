@@ -66,7 +66,7 @@ doRegCI <- function(y, x) {
         'b1.CI'      = b1.CI,
         'CIrange'    = CIrange,
         'stdResid'   = stdResid,
-        'r2'         = r2,
+        'r2'         = r2, 
         'r2adj'      = r2adj,
         'skew'       = skew,
         'bg'         = bg,
