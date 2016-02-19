@@ -127,27 +127,27 @@ combn <- function (x, m, FUN = NULL, simplify = TRUE, ...)
 
 
 
+################################################################
+# Dependency -- simpleReg():
+###############
 
-simpleReg <- function(X, y, weights = FALSE) {
+# NOTE: simple function to run a linear regression... for use 
+#       with BG()
+
+simpleReg <- function(X, y) {
     if(!is.matrix(X))
         stop("X must be a model matrix")
     if(nrow(X) != length(y))
          stop("X must be a model matrix")
-    if(weights) { # Use Weighted Least Squares Regression #
-        w           <-  TriCube(x=x, m=mean(x), h=(x[length(x)] - x[1])/2)
-        bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2)/(length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-    } else { # Use Ordinary Least Squares Regression #
-        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-    }
-    list(
+#    bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
+    qr <- qr(X)$qr
+    bHat <- chol2inv(qr) %*% t(X) %*% y
+    yHat        <-  X %*% bHat
+    sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
+#    vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
+    vcov        <-  sigmaHatUb * chol2inv(qr)
+    stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+     list(
         'bHat'       =  bHat,
         'yHat'       =  yHat,
         'sigmaHatUb' =  sigmaHatUb,
@@ -160,11 +160,9 @@ simpleReg <- function(X, y, weights = FALSE) {
 # Dependency -- BG():
 ###############
 
-# NOTE: This code is copied directly from the combn() function
-#        from the R {utils} package. Not sure if this matters
-#        as a dependency (i.e. whether we should strip this
-#        function down to just what we need)... need to ask
-#        Diego...
+# NOTE: This code is (very slightly) modified from bgtest.R
+#        from the lmtest github repo. I have stripped it down
+#       to minimal functionality for our purposes
 
 BG <- function(y, x, order = FALSE, fill=0) {
     X  <-  matrix(cbind(1, x), ncol=2)
@@ -172,10 +170,11 @@ BG <- function(y, x, order = FALSE, fill=0) {
     k <- ncol(X)
     if(order)
         order <- 1:order
-    else order <- 1:(n-k-1)
+    else {
+        order <- 1:(n-k-1)
+    }
     m <- length(order)
     resids <- simpleReg(X, y)$stdResid
-
     Z <- sapply(order, function(x) c(rep(fill, length.out = x), resids[1:(n-x)]))
         if(any(na <- !complete.cases(Z))) {
             X <- X[!na, , drop = FALSE]
@@ -184,17 +183,39 @@ BG <- function(y, x, order = FALSE, fill=0) {
             resids <- resids[!na]
             n <- nrow(X)
         }
-    auxfit <- simpleReg(cbind(X,Z), resids)
+    auxfit <- simpleReg(X=cbind(X, Z), resids)$yHat
 
-    bg <- n * sum(auxfit$yHat^2)/sum(resids^2)
-    names(bg) <- "Breusch-Godfrey Statistic / n"
+    bg   <- n * sum(auxfit^2)/sum(resids^2)
+    bg.n <- bg / n
+    names(bg) <- "Breusch-Godfrey Statistic"
+    names(bg.n) <- "Breusch-Godfrey Statistic / n"
     df <- m
     names(df) <- "df"
     list(
-        bg  =  bg / n,
-        df  = df
+        bg    =  bg,
+        bg.n  =  bg.n,
+        df    =  df
         )
 }
+
+
+makedata <- function(n, b0=0.1, b1=2, sd.x = 1, sd.e = 0.1) {
+    x <- rnorm(n, mean=10,sd=sd.x)
+    e <- rnorm(n, sd=sd.e)
+    y <- b0 + b1*x + e
+    list(
+        'y'          = y,
+        'x'          = x
+    )
+}
+
+
+## troubleshooting BG()
+# d <- makedata(50)
+# str(qr(cbind(1,d$x)))
+# bgtest(d$y ~ d$x, order=(length(d$x)-3))
+# BG(d$y, d$x)
+# simpleReg(cbind(1,d$x), d$y)$bHat
 
 ################################################################
 # GET WINDOWS
@@ -230,8 +251,10 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
+        BGtest2      <-  BG(y, x, order = FALSE)
+        bg.n2        <-  as.numeric(BGtest2$bg.n)
+        BGtest      <-  bgtest(y ~ x, order = (nrow(X) - 3))
+        bg.n        <-  as.numeric(BGtest$statistic) / nrow(X)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -239,8 +262,10 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg.df       <-  as.numeric(BGtest$statistic) / (BGtest$parameter)
+        BGtest2      <-  BG(y, x, order = FALSE)
+        bg.n2        <-  as.numeric(BGtest2$bg.n)
+        BGtest      <-  bgtest(y ~ x, order = (nrow(X) - 3))
+        bg.n        <-  as.numeric(BGtest$statistics) / nrow(X)
     }
     data.frame(
         weights  =  weights,
@@ -252,15 +277,15 @@ LocReg  <-  function(wins, xall, yall, ..., weights=TRUE) {
         b1.CI.lo =  b1.CI[1],
         b1.CI.hi =  b1.CI[2],
         skew     =  Skew(x = stdResid),
-        bg.df    =  bg.df
-    )
+        bg.n     =  bg.n,
+        bg.n2    =  bg.n2
+     )
 }
-
 
 ################################################################
 #  THE MAIN WRAPPER FUNCTION -- FindLocLin():
 #############
-FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, method = c("ns","sr","pc"),
+FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, method = c("ns","eq","pc"),
                          plots=TRUE, plot.name="testPlots.pdf.", all=FALSE, ...) {
     #  Get windows # 
     wins  <-  GetWindows(y = yall, alpha)
@@ -269,22 +294,22 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, method = c("ns","sr","
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     res$CI.range <- res$b1.CI.hi - res$b1.CI.lo
-    res  <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1.CI.lo', 'b1.CI.hi', 'CI.range', 'skew', 'bg.df')]
+    res  <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1.CI.lo', 'b1.CI.hi', 'CI.range', 'skew', 'bg.n', 'bg.n2' )]
     res$L     <-  ((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew)) +
-                  ((res$bg.df          - min(res$bg.df))    / sd(res$bg.df)) +
+                  ((res$bg.n           - min(res$bg.n) )    / sd(res$bg.n) ) +
                   ((res$CI.range       - min(res$CI.range)) / sd(res$CI.range))
-    res$L.sr  <-  (((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))     / (max(((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))))) +
-                  (((res$bg.df          - min(res$bg.df))    / sd(res$bg.df))    / (max(((res$bg.df          - min(res$bg.df))    / sd(res$bg.df))))) +
+    res$L.eq  <-  (((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))     / (max(((min(abs(res$skew)) + abs(res$skew))     / sd(res$skew))))) +
+                  (((res$bg.n           - min(res$bg.n) )    / sd(res$bg.n) )    / (max(((res$bg.n           - min(res$bg.n) )    / sd(res$bg.n) )))) +
                   (((res$CI.range       - min(res$CI.range)) / sd(res$CI.range)) / (max(((res$CI.range       - min(res$CI.range)) / sd(res$CI.range)))))
     res$L.pc  <-  ((pc.rank(abs(res$skew))) +
-                  (pc.rank((res$bg.df - min(res$bg.df)))) +
+                  (pc.rank((res$bg.n  - min(res$bg.n)))) +
                   (pc.rank((res$CI.range)))) / 3
     switch(match.arg(method),
            "ns" = {
                res   <- res[with(res, order(L)), ]
           },
-           "sr" = {
-               res   <- res[with(res, order(L.sr)), ]
+           "eq" = {
+               res   <- res[with(res, order(L.eq)), ]
            },
            "pc" = {
                res   <- res[with(res, order(L.pc)), ]
@@ -303,6 +328,8 @@ FindLocLin  <-  function(yall, xall, alpha, ref.b1=FALSE, method = c("ns","sr","
     }    
     nFits <- print(nrow(res))
     list(
+#        'alpha'   =  alpha,
+#        'weights'   =  weights,
         'nFits'   =  nFits,
         'res'     =  res
         )
@@ -365,11 +392,8 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
-        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
-        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg          <-  as.numeric(BGtest$statistic) / as.numeric(BGtest$parameter)
+        BGtest      <-  BG(y, x, order = FALSE)
+        bg.n        <-  as.numeric(BGtest$bg)
     } else { # Use Ordinary Least Squares Regression #
         bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
         yHat        <-  X %*% bHat
@@ -377,11 +401,8 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
         vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
         b1.CI       <-  bHat[2,] + qt(c(0.025,0.975),df=(length(x)-2))*sqrt(diag(vcov))[2]
         stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        acorr       <-  as.vector(acf(stdResid, plot=FALSE)$acf[-1])
-        Xac         <-  matrix(cbind(1, seq(0,1,len=length(acorr))), ncol=2)
-        b1.ac       <-  (solve(t(Xac) %*% Xac)) %*% t(Xac) %*% acorr 
-        BGtest      <-  bgtest(y ~ x, order=(length(x)-3))
-        bg          <-  as.numeric(BGtest$statistic) / as.numeric(BGtest$parameter)
+        BGtest      <-  BG(y, x, order = FALSE)
+        bg.n        <-  as.numeric(BGtest$bg)
     }
     list(
         'BestWindow' =  bestwin,
@@ -389,10 +410,9 @@ BestLocReg  <-  function(bestwin, y, x, weights, ..., verbose=TRUE) {
         'yHat'       =  yHat,
         'sigmaHatUb' =  sigmaHatUb,
         'stdResid'   =  stdResid,
+        'skew'       =  Skew(x = stdResid),
         'b1.CI'      =  b1.CI,
-        'b1.ac'      =  b1.ac,
-        'bg'         =  bg,
-        'skew'       =  Skew(x = stdResid)
+        'bg'         =  bg.n
     )
 }
 
@@ -456,4 +476,31 @@ PlotBest <- function(res, yall, xall, best=1) {
          main=expression(paste("Best Local Regression: ", beta[1]," = ", b1)))
     points(y ~ x, pch=21, bg=col1, ask=TRUE)
     abline(coef=c(LocFit$bHat[1],LocFit$bHat[2]), col=1)    
+}
+
+
+PlotBeta1 <- function(results){
+    c1 <- adjustcolor('#A67A01', alpha=0.75)
+    c2 <- adjustcolor('#6D65FA', alpha=0.75)
+    c3 <- adjustcolor('#B6084E', alpha=0.75)
+#browser()
+    dev.new()
+    par(mfrow=c(1,1))
+    #pdf(file="beta1.pdf", family="CM Roman", width=6, height=6)
+    plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
+        main=expression(paste("Distribution of ", beta[1])), cex.main=2)
+    abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
+    abline(v=results$res$b1[results$res$L.eq == min(results$res$L.eq)], col=c2, lty=2, lwd=4)
+    abline(v=results$res$b1[results$res$L.pc == min(results$res$L.pc)], col=c3, lty=3, lwd=4)
+    legend(x = min(res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
+        y = (0.95*max(density(res$b1)$y)),
+        legend = c(expression(paste(italic(L))),
+                   expression(paste(italic(L[eq]))),
+                   expression(paste(italic(L["%"])))),
+        lwd = 4,
+        lty = c(1,2,3),
+        col = c(c1, c2, c3),
+        cex=1)
+    #dev.off()
+    #embed_fonts("beta1.pdf", outfile = "beta1.pdf")
 }

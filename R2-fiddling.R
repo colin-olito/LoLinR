@@ -75,7 +75,7 @@ doRegCI <- function(y, x) {
 }
 
 
-
+d <- makedata(50)
 data <- makedata(50)
 Reg1 <- doReg(data$y, data$x)
 RegCI1 <- doRegCI(data$y, data$x)
