@@ -17,16 +17,16 @@ data     <-  read.csv("data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE
 
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relation b/w different parts of metric  ##
-results  <-  FindLocLin(yall=data$D, xall=data$time, alpha=0.3, method="eq", 
-                        ref.b1 = FALSE, plots=FALSE, weights=TRUE, all=TRUE, 
+results  <-  findLocLin(yall=data$D, xall=data$time, alpha=0.3, method="eq", 
+                        refB1 = FALSE, plots=FALSE, weights=TRUE, all=TRUE, 
                         verbose=TRUE)
 
 #toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1), filename='BG.Lpc.pdf')
-PlotBest(res=results, yall=data$D, xall=data$time, best=1)
-PlotBeta1(res=results)
+plotBest(res=results, yall=data$D, xall=data$time, best=1)
+plotBeta1(res=results)
 head(results$res)
 
-xrange <- (results$res$Rbound - results$res$Lbound)
+xrange  <-  (results$res$Rbound - results$res$Lbound)
 
 ## Component Metrics  ##
 L.skew  <-  ((min(abs(results$res$skew)) + abs(results$res$skew)) / 
