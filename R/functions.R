@@ -51,12 +51,14 @@ simpleReg <- function(X, y) {
     if(nrow(X) != length(y)) {
         stop('X must be a model matrix')
     }
-    qr          <-  qr(X)$qr
-    bHat        <-  chol2inv(qr) %*% t(X) %*% y
+    QR          <-  qr(X, tol=1e-10)$qr
+    bHat        <-  chol2inv(QR) %*% t(X) %*% y
+#    bHat        <-  solve(t(X) %*% X) %*% t(X) %*% y
     yHat        <-  X %*% bHat
     sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-    vcov        <-  sigmaHatUb * chol2inv(qr)
+    vcov        <-  sigmaHatUb * chol2inv(QR)
     stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
+#    stdResid    <-  (y - yHat)
     list(
         'bHat'       =  bHat,
         'yHat'       =  yHat,
@@ -66,9 +68,38 @@ simpleReg <- function(X, y) {
     )
 }
 
+
+d <- makedata(50)
+X <- cbind(1,d$x)
+solve(t(X) %*% X) %*% t(X) %*% d$y
+chol2inv(qr(X, tol=1e-10)$qr) %*% t(X) %*% d$y
+chol2inv(qr(X, tol=1e-10)$qr)
+head(solve(t(X) %*% X))
+
+head(qr(X, tol=1e-10)$qr)
+
+lm1 <- lm.fit(X, d$y)
+test <-  simpleReg(X, d$y)
+test$sigmaHatUb
+
+lm1$resid
+as.vector(test$stdResid)
+lm1$resid - as.vector(test$stdResid * sqrt(test$sigmaHatUb))
+
+lm1$fitted - as.vector(test$yHat)
+
+
+
+
+as.vector(simpleReg(X=cbind(X, Z), resids)$yHat) - lm.fit(x=cbind(X, Z), resids)$fitted
+
+breuschGodfrey(d$y, d$x)
+bgtest(d$y ~ d$x, order=(length(d$y)-3))
+
 ################################################################
 # Dependency -- breuschGodfrey():
 ###############
+
 
 # NOTE: This code is (very slightly) modified from bgtest.R
 #        from the lmtest github repo. I have stripped it down
@@ -93,8 +124,8 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
         resids  <-  resids[!na]
         n       <-  nrow(X)
     }
-    auxfit      <-  simpleReg(X=cbind(X, Z), resids)$yHat
-    bg          <-  n * sum(auxfit^2) / sum(resids^2)
+    auxfit      <-  simpleReg(X=cbind(X, Z), resids)
+    bg          <-  n * sum(auxfit$yHat^2) / sum(resids^2)
     bgN         <-  bg / n
     names(bg)   <-  'Breusch-Godfrey Statistic'
     names(bgN)  <-  'Breusch-Godfrey Statistic / n'
@@ -176,7 +207,7 @@ locReg  <-  function(wins, xall, yall, weights=TRUE, ...) {
 #  THE MAIN WRAPPER FUNCTION -- findLocLin():
 #############
 findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'pc'),
-                         plots=TRUE, plotName='testPlots.pdf.', all=FALSE, ...) {
+                         plots=TRUE, plotName='testPlots.pdf.', ...) {
     #  Get windows # 
     wins  <-  getWindows(y=yall, alpha)
     #  Fit Local Regressions  #
@@ -186,18 +217,18 @@ findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'p
     res$ciRange  <-  res$b1UpCI - res$b1LoCI
     res          <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN', 'bgN2')]
     res$L        <-  ((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) + ((res$bgN - min(res$bgN)) / sd(res$bgN)) + ((res$ciRange - min(res$ciRange)) / sd(res$ciRange))
-    res$LEq      <-  (((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) / (max(((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew))))) + (((res$bgN - min(res$bgN)) / sd(res$bgN)) / (max(((res$bgN - min(res$bgN)) / sd(res$bgN))))) + (((res$ciRange - min(res$ciRange)) / sd(res$ciRange)) / (max(((res$ciRange - min(res$ciRange)) / sd(res$ciRange)))))
-    res$LPc      <-  ((pcRank(abs(res$skew))) + (pcRank((res$bgN - min(res$bgN)))) + (pcRank((res$ciRange)))) / 3
+    res$Leq      <-  (((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) / (max(((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew))))) + (((res$bgN - min(res$bgN)) / sd(res$bgN)) / (max(((res$bgN - min(res$bgN)) / sd(res$bgN))))) + (((res$ciRange - min(res$ciRange)) / sd(res$ciRange)) / (max(((res$ciRange - min(res$ciRange)) / sd(res$ciRange)))))
+    res$Lpc      <-  ((pcRank(abs(res$skew))) + (pcRank((res$bgN - min(res$bgN)))) + (pcRank((res$ciRange)))) / 3
     
     switch(match.arg(method),
         'ns' = {
             res   <-  res[with(res, order(L)), ]
         },
         'eq' = {
-            res   <-  res[with(res, order(LEq)), ]
+            res   <-  res[with(res, order(Leq)), ]
         },
         'pc' = {
-            res   <-  res[with(res, order(LPc)), ]
+            res   <-  res[with(res, order(Lpc)), ]
         }
     )
     
@@ -205,9 +236,7 @@ findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'p
     if(numericB1) {
         res  <-  res[with(res, order(abs(refB1 - res$b1))), ]
     } 
-    if(!all) {
-        res  <-  res[1:25, ]
-    }
+
     #  Plots to accompany best results  #
     if(plots) {        
         dev.new(height=15, width=15)
@@ -348,8 +377,8 @@ plotBeta1 <- function(results) {
     par(mfrow=c(1, 1))
     plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])), main=expression(paste('Distribution of ', beta[1])), cex.main=2)
     abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
-    abline(v=results$res$b1[results$res$LEq == min(results$res$LEq)], col=c2, lty=2, lwd=4)
-    abline(v=results$res$b1[results$res$LPc == min(results$res$LPc)], col=c3, lty=3, lwd=4)
+    abline(v=results$res$b1[results$res$Leq == min(results$res$Leq)], col=c2, lty=2, lwd=4)
+    abline(v=results$res$b1[results$res$Lpc == min(results$res$Lpc)], col=c3, lty=3, lwd=4)
     legend(
           x       =  min(res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
           y       =  0.95 * max(density(res$b1)$y),

@@ -18,8 +18,7 @@ data     <-  read.csv("data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relation b/w different parts of metric  ##
 results  <-  findLocLin(yall=data$D, xall=data$time, alpha=0.3, method="eq", 
-                        refB1 = FALSE, plots=FALSE, weights=TRUE, all=TRUE, 
-                        verbose=TRUE)
+                        refB1 = FALSE, plots=FALSE, weights=TRUE,  verbose=TRUE)
 
 #toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1), filename='BG.Lpc.pdf')
 plotBest(res=results, yall=data$D, xall=data$time, best=1)
@@ -31,21 +30,21 @@ xrange  <-  (results$res$Rbound - results$res$Lbound)
 ## Component Metrics  ##
 L.skew  <-  ((min(abs(results$res$skew)) + abs(results$res$skew)) / 
                 sd(results$res$skew))
-L.CI    <- ((results$res$CI.range - min(results$res$CI.range)) / 
-                sd(results$res$CI.range))
-L.BG    <- ((results$res$bg.n - min(results$res$bg.n)) / 
-                sd(results$res$bg.n))
+L.CI    <- ((results$res$ciRange - min(results$res$ciRange)) / 
+                sd(results$res$ciRange))
+L.BG    <- ((results$res$bgN - min(results$res$bgN)) / 
+                sd(results$res$bgN))
 
 L.skew.eq  <-  (((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)) /
                 (max(((min(abs(results$res$skew)) + abs(results$res$skew)) / sd(results$res$skew)))))
-L.CI.eq    <- (((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range))/
-               (max(((results$res$CI.range - min(results$res$CI.range)) / sd(results$res$CI.range)))))
-L.BG.eq    <- (((results$res$bg.n - min(results$res$bg.n)) / sd(results$res$bg.n)) /
-               (max(((results$res$bg.n - min(results$res$bg.n))/ sd(results$res$bg.n)))))
+L.CI.eq    <- (((results$res$ciRange - min(results$res$ciRange)) / sd(results$res$ciRange))/
+               (max(((results$res$ciRange - min(results$res$ciRange)) / sd(results$res$ciRange)))))
+L.BG.eq    <- (((results$res$bgN - min(results$res$bgN)) / sd(results$res$bgN)) /
+               (max(((results$res$bgN - min(results$res$bgN))/ sd(results$res$bgN)))))
 
-L.skew.pc <- pc.rank(abs(results$res$skew))
-L.CI.pc <- (pc.rank((results$res$CI.range)))
-L.BG.pc <- (pc.rank((results$res$bg.n - min(results$res$bg.n))))
+L.skew.pc <- pcRank(abs(results$res$skew))
+L.CI.pc <- (pcRank((results$res$ciRange)))
+L.BG.pc <- (pcRank((results$res$bgN - min(results$res$bgN))))
 
 
 
@@ -58,6 +57,14 @@ hist(L.skew.eq, breaks=50)
 hist(L.CI.eq, breaks=50)
 hist(L.BG.eq, breaks=50)
 
+##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##
+##  Troubleshooting Breusch-Godfrey Statistic  ##
+plot(results$res$bgN2 ~ results$res$bgN, pch=21, bg=col2, col=NA,
+     ylab=expression(paste(italic(BG[ours]))), xlab=expression(paste(italic(BG[lmtest]))))
+plot(results$res$bgN)
+plot(results$res$bgN2, ylim=c(0.98,1.02))
+hist(results$res$bgN)
+hist(results$res$bgN2)
 
 ##  Effects of different standardizations on each component metric  ##
 
@@ -86,10 +93,10 @@ plot(L.CI.pc ~ L.CI.eq, pch=21, bg=col2, col=NA,
 par(mfrow=c(3,4), cex.lab=1.5)
 plot(density(results$res$L), lwd=4, col=col1, xlab=expression(paste(italic(L))),
      main=expression(paste("Distribution of ", italic(L))), cex.main=2)
-plot(density(results$res$L.eq), lwd=4, col=col1, 
+plot(density(results$res$Leq), lwd=4, col=col1, 
     xlab=expression(paste(italic(L[eq]))), 
     main=expression(paste("Distribution of ", italic(L[eq]))), cex.main=2)
-plot(density(results$res$L.pc), lwd=4, col=col1, xlab=expression(paste(italic(L["%"]))),
+plot(density(results$res$Lpc), lwd=4, col=col1, xlab=expression(paste(italic(L["%"]))),
      main=expression(paste("Distribution of ", italic(L["%"]))), cex.main=2)
 plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
      main=expression(paste("Distribution of ", beta[1])), cex.main=2)
@@ -117,17 +124,17 @@ plot(results$res$L ~  abs(results$res$skew), pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L))), xlab=expression(paste(italic(Skew))))
 plot(results$res$L ~  L.BG, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L))), xlab=expression(paste(BG)))
-plot(results$res$L.eq ~ L.CI.eq, pch=21, bg=col2, col=NA,
+plot(results$res$Leq ~ L.CI.eq, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L[eq]))), xlab=expression(paste(italic(C.I.~range[eq]))))
-plot(results$res$L.eq ~  L.skew.eq, pch=21, bg=col2, col=NA,
+plot(results$res$Leq ~  L.skew.eq, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L[eq]))), xlab=expression(paste(italic(C.I.[eq]))))
-plot(results$res$L.eq ~  L.BG.eq, pch=21, bg=col2, col=NA,
+plot(results$res$Leq ~  L.BG.eq, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L[eq]))), xlab=expression(paste(BG[eq])))
-plot(results$res$L.pc ~ L.CI.pc, pch=21, bg=col2, col=NA,
+plot(results$res$Lpc ~ L.CI.pc, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(C.I.~range["%"]))))
-plot(results$res$L.pc ~  L.skew.pc, pch=21, bg=col2, col=NA,
+plot(results$res$Lpc ~  L.skew.pc, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(Skew["%"]))))
-plot(results$res$L.pc ~  L.BG.pc, pch=21, bg=col2, col=NA,
+plot(results$res$Lpc ~  L.BG.pc, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(BG["%"])))
 
 
@@ -136,9 +143,9 @@ plot(results$res$L.pc ~  L.BG.pc, pch=21, bg=col2, col=NA,
 par(mfrow=c(2,3), cex.lab=1.5)
 plot(results$res$L ~ xrange, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L))), xlab=expression(paste(italic(n))))
-plot(results$res$L.eq ~ xrange, pch=21, bg=col2, col=NA,
+plot(results$res$Leq ~ xrange, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L[eq]))), xlab=expression(paste(italic(n))))
-plot(results$res$L.pc ~ xrange, pch=21, bg=col2, col=NA,
+plot(results$res$Lpc ~ xrange, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(L["%"]))), xlab=expression(paste(italic(n))))
 
 par(mfrow=c(3,3), cex.lab=1.5)
@@ -191,9 +198,9 @@ plot(L.CI.pc ~ L.BG.pc, pch=21, bg=col2, col=NA,
 par(mfrow=c(1,3), cex.lab=1.5)
 plot(results$res$b1 ~ results$res$L, pch=21, bg=col2, col=NA,
      ylab=expression(paste(beta[1])), xlab=expression(paste(L)))
-plot(results$res$b1 ~ results$res$L.eq, pch=21, bg=col2, col=NA,
+plot(results$res$b1 ~ results$res$Leq, pch=21, bg=col2, col=NA,
      ylab=expression(paste(beta[1])), xlab=expression(paste(L[eq])))
-plot(results$res$b1 ~ results$res$L.pc, pch=21, bg=col2, col=NA,
+plot(results$res$b1 ~ results$res$Lpc, pch=21, bg=col2, col=NA,
      ylab=expression(paste(beta[1])), xlab=expression(paste(L["%"])))
 
 par(mfrow=c(3,3), cex.lab=1.5)
@@ -225,8 +232,8 @@ pdf(file="beta1.pdf", family="CM Roman", width=6, height=6)
 plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
      main=expression(paste("Distribution of ", beta[1])), cex.main=2)
 abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
-abline(v=results$res$b1[results$res$L.eq == min(results$res$L.eq)], col=c2, lty=2, lwd=4)
-abline(v=results$res$b1[results$res$L.pc == min(results$res$L.pc)], col=c3, lty=3, lwd=4)
+abline(v=results$res$b1[results$res$Leq == min(results$res$Leq)], col=c2, lty=2, lwd=4)
+abline(v=results$res$b1[results$res$Lpc == min(results$res$Lpc)], col=c3, lty=3, lwd=4)
 legend(x = min(results$res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
        y = (0.95*max(density(results$res$b1)$y)),
        legend = c(expression(paste(italic(L))),
