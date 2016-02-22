@@ -38,63 +38,6 @@ skew  <-  function(x) {
     (n/((n - 1) * (n - 2))) * sum(((x - mean(x)) / sd(x))^3)
 }
 
-################################################################
-# Dependency -- simpleReg():
-###############
-
-# NOTE: simple function to run a linear regression... for use 
-#       with breuschGodfrey()
-simpleReg <- function(X, y) {
-    if(!is.matrix(X)) {
-        stop('X must be a model matrix')
-    }
-    if(nrow(X) != length(y)) {
-        stop('X must be a model matrix')
-    }
-    QR          <-  qr(X, tol=1e-10)$qr
-    bHat        <-  chol2inv(QR) %*% t(X) %*% y
-#    bHat        <-  solve(t(X) %*% X) %*% t(X) %*% y
-    yHat        <-  X %*% bHat
-    sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-    vcov        <-  sigmaHatUb * chol2inv(QR)
-    stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-#    stdResid    <-  (y - yHat)
-    list(
-        'bHat'       =  bHat,
-        'yHat'       =  yHat,
-        'sigmaHatUb' =  sigmaHatUb,
-        'vcov'       =  vcov,
-        'stdResid'   =  stdResid
-    )
-}
-
-
-d <- makedata(50)
-X <- cbind(1,d$x)
-solve(t(X) %*% X) %*% t(X) %*% d$y
-chol2inv(qr(X, tol=1e-10)$qr) %*% t(X) %*% d$y
-chol2inv(qr(X, tol=1e-10)$qr)
-head(solve(t(X) %*% X))
-
-head(qr(X, tol=1e-10)$qr)
-
-lm1 <- lm.fit(X, d$y)
-test <-  simpleReg(X, d$y)
-test$sigmaHatUb
-
-lm1$resid
-as.vector(test$stdResid)
-lm1$resid - as.vector(test$stdResid * sqrt(test$sigmaHatUb))
-
-lm1$fitted - as.vector(test$yHat)
-
-
-
-
-as.vector(simpleReg(X=cbind(X, Z), resids)$yHat) - lm.fit(x=cbind(X, Z), resids)$fitted
-
-breuschGodfrey(d$y, d$x)
-bgtest(d$y ~ d$x, order=(length(d$y)-3))
 
 ################################################################
 # Dependency -- breuschGodfrey():
@@ -114,7 +57,7 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
         order  <-  1:(n - k - 1)
     }
     m       <-  length(order)
-    resids  <-  simpleReg(X, y)$stdResid
+    resids  <-  lm.fit(X, y)$residuals
     Z       <-  sapply(order, function(x) c(rep(fill, length.out=x), resids[1:(n - x)]))
     na      <-  !complete.cases(Z)
     if(any(na)) {
@@ -124,8 +67,8 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
         resids  <-  resids[!na]
         n       <-  nrow(X)
     }
-    auxfit      <-  simpleReg(X=cbind(X, Z), resids)
-    bg          <-  n * sum(auxfit$yHat^2) / sum(resids^2)
+    auxfit      <-  lm.fit(x=cbind(X, Z), y=resids)
+    bg          <-  n * sum(auxfit$fitted^2) / sum(resids^2)
     bgN         <-  bg / n
     names(bg)   <-  'Breusch-Godfrey Statistic'
     names(bgN)  <-  'Breusch-Godfrey Statistic / n'
@@ -158,38 +101,23 @@ getWindows  <-  function(y, alpha) {
 # flexibility in the findLocLin() function will come from minor modifications to this
 # bit of code.
 
-locReg  <-  function(wins, xall, yall, weights=TRUE, ...) {
+locReg  <-  function(wins, xall, yall, ...) {
     #  Grab data window for local regression  #
     x  <-  xall[wins[1]:wins[2]]
     y  <-  yall[wins[1]:wins[2]]
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
-    if(weights) { # Use Weighted Least Squares Regression #
-        w           <-  triCube(x=x, m=mean(x), h=(x[length(x)] - x[1]) / 2)
-        bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
-        b1CI        <-  bHat[2, ] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vcov))[2]
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest2     <-  breuschGodfrey(y, x, order=FALSE)
-        bgN2        <-  as.numeric(BGtest2$bgN)
-        BGtest      <-  bgtest(y ~ x, order=(nrow(X) - 3))
-        bgN         <-  as.numeric(BGtest$statistic) / nrow(X)
-    } else { # Use Ordinary Least Squares Regression #
-        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
-        b1CI        <-  bHat[2, ] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vcov))[2]
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest2     <-  breuschGodfrey(y, x, order=FALSE)
-        bgN2        <-  as.numeric(BGtest2$bgN)
-        BGtest      <-  bgtest(y ~ x, order=(nrow(X) - 3))
-        bgN         <-  as.numeric(BGtest$statistics) / nrow(X)
-    }
+    # OLS Regression #
+    lmFit    <-  lm.fit(x=X, y=y)
+    bHat     <-  coefficients(lmFit)
+    vc       <-  chol2inv(lmFit$qr$qr) * sum(lmFit$residuals^2) / lmFit$df.residual
+    b1CI     <-  bHat[2] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vc))[2]
+    # BG test for serial correlation #
+	BGtest  <-  breuschGodfrey(y, x, order=FALSE)
+    bgN     <-  as.numeric(BGtest$bgN)
+#    BGtest2   <-  bgtest(y ~ x, order=(nrow(X) - 3))
+#    bgN2      <-  as.numeric(BGtest$statistic) / nrow(X)
     data.frame(
-        weights  =  weights,
         Lbound   =  wins[1],
         Rbound   =  wins[2],
         alph     =  length(wins[1]:wins[2]) / length(yall),
@@ -197,9 +125,8 @@ locReg  <-  function(wins, xall, yall, weights=TRUE, ...) {
         b1       =  bHat[2],
         b1LoCI   =  b1CI[1],
         b1UpCI   =  b1CI[2],
-        skew     =  skew(x=stdResid),
-        bgN      =  bgN,
-        bgN2     =  bgN2
+        skew     =  skew(x=(lmFit$residuals / lmFit$df.residual)),
+        bgN      =  bgN
     )
 }
 
@@ -215,7 +142,7 @@ findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'p
     res   <-  do.call(rbind.data.frame, res)
     #  Calculate combined metric (L) for linearity & fit  #
     res$ciRange  <-  res$b1UpCI - res$b1LoCI
-    res          <-  res[, c('weights', 'Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN', 'bgN2')]
+    res          <-  res[, c('Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN')]
     res$L        <-  ((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) + ((res$bgN - min(res$bgN)) / sd(res$bgN)) + ((res$ciRange - min(res$ciRange)) / sd(res$ciRange))
     res$Leq      <-  (((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) / (max(((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew))))) + (((res$bgN - min(res$bgN)) / sd(res$bgN)) / (max(((res$bgN - min(res$bgN)) / sd(res$bgN))))) + (((res$ciRange - min(res$ciRange)) / sd(res$ciRange)) / (max(((res$ciRange - min(res$ciRange)) / sd(res$ciRange)))))
     res$Lpc      <-  ((pcRank(abs(res$skew))) + (pcRank((res$bgN - min(res$bgN)))) + (pcRank((res$ciRange)))) / 3
@@ -278,36 +205,23 @@ outputHist  <-  function(resultsTable) {
 #  the dataset. Also uses a list() to output objects of different
 #  length (e.g. bHat and stdResid).
 
-bestLocReg  <-  function(bestwin, y, x, weights, verbose=TRUE, ...) {
+bestLocReg  <-  function(bestwin, y, x, verbose=TRUE, ...) {
     # Design Matrix #
     X  <-  matrix(cbind(1, x), ncol=2)
-    if(weights) { # Use Weighted Least Squares Regression #
-        w           <-  triCube(x=x, m=mean(x), h=(x[length(x)] - x[1]) / 2)
-        bHat        <-  (solve(t(X) %*% diag(w) %*% X)) %*% t(X) %*% diag(w) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2)/(length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% diag(w) %*% X))
-        b1CI        <-  bHat[2, ] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vcov))[2]
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest      <-  breuschGodfrey(y, x, order=FALSE)
-        bgN         <-  as.numeric(BGtest$bg)
-    } else { # Use Ordinary Least Squares Regression #
-        bHat        <-  (solve(t(X) %*% X)) %*% t(X) %*% y
-        yHat        <-  X %*% bHat
-        sigmaHatUb  <-  sum((y - yHat)^2) / (length(y) - 2)
-        vcov        <-  sigmaHatUb * (solve(t(X) %*% X))
-        b1CI        <-  bHat[2, ] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vcov))[2]
-        stdResid    <-  (y - yHat) / sqrt(sigmaHatUb)
-        BGtest      <-  breuschGodfrey(y, x, order=FALSE)
-        bgN         <-  as.numeric(BGtest$bg)
-    }
+    # OLS Regression #
+    lmFit   <-  lm.fit(x=X, y=y)
+    bHat    <-  coefficients(lmFit)
+    vc      <-  chol2inv(lmFit$qr$qr) * sum(lmFit$residuals^2) / lmFit$df.residual
+    b1CI    <-  bHat[2] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vc))[2]
+    sigmaHatUb  <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
+    BGtest  <-  breuschGodfrey(y, x, order=FALSE)
+    bgN     <-  as.numeric(BGtest$bgN)
     list(
         'BestWindow' =  bestwin,
         'bHat'       =  bHat,
-        'yHat'       =  yHat,
-        'sigmaHatUb' =  sigmaHatUb,
-        'stdResid'   =  stdResid,
-        'skew'       =  skew(x = stdResid),
+        'yHat'       =  lmFit$fitted,
+        'stdResids'  =  lmFit$residuals / (sqrt(sigmaHatUb)),
+        'skew'       =  skew(x = (lmFit$residuals / lmFit$df.residual)),
         'b1CI'       =  b1CI,
         'bg'         =  bgN
     )
@@ -333,13 +247,12 @@ bestLocReg  <-  function(bestwin, y, x, weights, verbose=TRUE, ...) {
 
 plotBest <- function(res, yall, xall, best=1) {
     #  Recover data window for chosen local regression model  #
-    weight   <-  res$res$weights[1]
     bestwin  <-  c(res$res$Lbound[best], res$res$Rbound[best])
     y        <-  yall[bestwin[1]:bestwin[2]]
     x        <-  xall[bestwin[1]:bestwin[2]]
     #  Fit block  #
-    LocFit  <-  bestLocReg(bestwin, y=y, x=x, weight)
-    b1      <-  as.numeric(LocFit$bHat[2,1])
+    LocFit  <-  bestLocReg(bestwin, y=y, x=x)
+    b1      <-  LocFit$bHat[2]
 
     #  Residual Plots  #
     dev.new()
@@ -380,8 +293,8 @@ plotBeta1 <- function(results) {
     abline(v=results$res$b1[results$res$Leq == min(results$res$Leq)], col=c2, lty=2, lwd=4)
     abline(v=results$res$b1[results$res$Lpc == min(results$res$Lpc)], col=c3, lty=3, lwd=4)
     legend(
-          x       =  min(res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
-          y       =  0.95 * max(density(res$b1)$y),
+          x       =  min(results$res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
+          y       =  0.95 * max(density(results$res$b1)$y),
           legend  =  c(expression(paste(italic(L))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),

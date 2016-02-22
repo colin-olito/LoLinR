@@ -18,7 +18,7 @@ data     <-  read.csv("data/TestO2data.csv", header=TRUE, stringsAsFactors=FALSE
 ##  Using all=TRUE to examine distributions of L  ##
 ##   and relation b/w different parts of metric  ##
 results  <-  findLocLin(yall=data$D, xall=data$time, alpha=0.3, method="eq", 
-                        refB1 = FALSE, plots=FALSE, weights=TRUE,  verbose=TRUE)
+                        refB1 = FALSE, plots=FALSE, verbose=TRUE)
 
 #toPdf(PlotBest(res=results, yall=data$D, xall=data$time, best=1), filename='BG.Lpc.pdf')
 plotBest(res=results, yall=data$D, xall=data$time, best=1)
@@ -57,17 +57,7 @@ hist(L.skew.eq, breaks=50)
 hist(L.CI.eq, breaks=50)
 hist(L.BG.eq, breaks=50)
 
-##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##
-##  Troubleshooting Breusch-Godfrey Statistic  ##
-plot(results$res$bgN2 ~ results$res$bgN, pch=21, bg=col2, col=NA,
-     ylab=expression(paste(italic(BG[ours]))), xlab=expression(paste(italic(BG[lmtest]))))
-plot(results$res$bgN)
-plot(results$res$bgN2, ylim=c(0.98,1.02))
-hist(results$res$bgN)
-hist(results$res$bgN2)
-
 ##  Effects of different standardizations on each component metric  ##
-
 par(mfrow=c(3,3))
 plot(L.skew ~ L.skew.eq, pch=21, bg=col2, col=NA,
      ylab=expression(paste(italic(Skew))), xlab=expression(paste(italic(Skew[eq]))))
@@ -226,9 +216,10 @@ plot(results$res$b1 ~ L.BG.pc, pch=21, bg=col2, col=NA,
 c1 <- adjustcolor('#A67A01', alpha=0.75)
 c2 <- adjustcolor('#6D65FA', alpha=0.75)
 c3 <- adjustcolor('#B6084E', alpha=0.75)
+loadfonts()
 
 par(mfrow=c(1,1))
-pdf(file="beta1.pdf", family="CM Roman", width=6, height=6)
+pdf(file="beta_test.pdf", family="CM Roman", width=6, height=6)
 plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])),
      main=expression(paste("Distribution of ", beta[1])), cex.main=2)
 abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
@@ -244,7 +235,7 @@ legend(x = min(results$res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(re
        col = c(c1, c2, c3),
        cex=1)
 dev.off()
-embed_fonts("beta1.pdf", outfile = "beta1.pdf")
+embed_fonts("beta_test.pdf", outfile = "beta_test.pdf")
 
 
 #########################################################
