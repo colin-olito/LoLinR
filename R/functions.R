@@ -134,7 +134,7 @@ locReg  <-  function(wins, xall, yall, ...) {
 #  THE MAIN WRAPPER FUNCTION -- findLocLin():
 #############
 findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'pc'),
-                         plots=TRUE, plotName='testPlots.pdf.', ...) {
+                         plots=TRUE, plotName='testPlots.pdf', ...) {
     #  Get windows # 
     wins  <-  getWindows(y=yall, alpha)
     #  Fit Local Regressions  #
@@ -163,11 +163,9 @@ findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'p
     if(numericB1) {
         res  <-  res[with(res, order(abs(refB1 - res$b1))), ]
     } 
-
     #  Plots to accompany best results  #
     if(plots) {        
-        dev.new(height=15, width=15)
-        outputPlot(res, xall, yall)
+        toPdf(outputPlot(res, xall, yall), filename=plotName, height=30,width=30)
     }
     nFits  <-  print(nrow(res))
     list(
@@ -181,13 +179,15 @@ findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'p
 ####################
 outputPlot  <-  function(resultsTable, x, y) {
     col1  <-  adjustcolor('#1B6889', alpha=0.5)
+    lgrey <-  adjustcolor('grey80', alpha=0.2)
+    dgrey <-  adjustcolor('grey60', alpha=0.5)
     par(mfrow=c(5,5))
-    for(i in seq_len(nrow(resultsTable))) {
+    for(i in 1:25) {
         # Subset Data #
         ytemp  <-  y[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
         xtemp  <-  x[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
         # Plot #
-        plot(y ~ x, pch=21, col='grey80', main=i)
+        plot(y ~ x, pch=21, col=dgrey, bg=lgrey, main=i)
         points(ytemp ~ xtemp, pch=21, bg=col1, ask=TRUE)
         abline(coef=c(resultsTable$b0[i],resultsTable$b1[i]), col=2)
     }
@@ -195,6 +195,18 @@ outputPlot  <-  function(resultsTable, x, y) {
 
 outputHist  <-  function(resultsTable) {
     hist(resultsTable$b1, breaks=25)
+}
+
+toDev  <-  function(expr, dev, filename, ..., verbose=TRUE) {
+  if ( verbose )
+    cat(sprintf('Creating %s\n', filename))
+  dev(filename, ...)
+  on.exit(dev.off())
+  eval.parent(substitute(expr))
+}
+
+toPdf  <-  function(expr, filename, ...) {
+  toDev(expr, pdf, filename, ...)
 }
 
 ##############################
@@ -277,8 +289,11 @@ plotBest <- function(res, yall, xall, best=1) {
     #  Overall Regression Plot  #
     dev.new()
     col1  <-  adjustcolor('#1B6889', alpha=0.5)
-    plot(yall ~ xall, pch=21, col='grey80', ask=TRUE, main=expression(paste('Best Local Regression: ', beta[1],' = ', b1)))
-    points(y ~ x, pch=21, bg=col1, ask=TRUE)
+    lgrey <-  adjustcolor('grey80', alpha=0.2)
+    dgrey <-  adjustcolor('grey60', alpha=0.5)
+    plot(yall ~ xall, pch=21, col=dgrey, bg=lgrey, cex=2,
+    	ask=TRUE, main=expression(paste('Best Local Regression: ', beta[1],' = ', b1)))
+    points(y ~ x, pch=21, bg=col1, cex=2, ask=TRUE)
     abline(coef=c(LocFit$bHat[1], LocFit$bHat[2]), col=1)
 }
 
