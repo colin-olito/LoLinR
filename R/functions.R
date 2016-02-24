@@ -1,15 +1,25 @@
 ## Main package functions
 
-##' Calculate the percentile values of a vector x
+##' Wrapper - check if vector is numeric
 ##'
-##' @title Calculate the percentile values of a vector x
-##' @param x A numeric vector.
-##' @return A numeric vector of percentiles truncated between 0 and 1
-##' @export
-pcRank <- function(x) {
+##' @title Wrapper for \code{is.numeric}
+##' @param x A numeric vector
+##' @return Breaks function and returns error message if x 
+##' is non-numeric
+checkNumeric  <-  function(x) {
     xNumeric  <-  is.numeric(x)
     if(!xNumeric)
         stop('x must be numeric') 
+}
+
+##' Calculate the percentile values of a vector x
+##'
+##' @title Calculate the percentile values of a vector x
+##' @param x A numeric vector
+##' @return A numeric vector of percentiles truncated between 0 and 1
+##' @export
+pcRank  <-  function(x) {
+    checkNumeric(x)
     percentiles  <-  trunc(rank(x, na.last=NA)) / sum(!is.na(x))
     allUnique    <-  length(percentiles) == length(unique(percentiles))
     if(!allUnique)
@@ -20,15 +30,13 @@ pcRank <- function(x) {
 ##' Sample skewness
 ##'
 ##' @title Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient)
-##' @param x A numeric vector.
+##' @param x A numeric vector
 ##' @details This function is a dependency for \code{findLocLin}
 ##' where it is used to calculate the (sample) skewness of standardized residuals.
 ##' @return A numeric vector of length 1
 ##' @export
 skew  <-  function(x, na.rm=TRUE) {
-    xNumeric  <-  is.numeric(x)
-    if(!xNumeric)
-        stop('x must be numeric') 
+    checkNumeric(x)
     if(na.rm)
         x  <-  x[!is.na(x)]
     n  <-  length(x)
@@ -77,13 +85,24 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     )
 }
 
-################################################################
-# GET WINDOWS
-#############
-getWindows  <-  function(y, alpha) {
-    lenY        <-  length(y)
-    minWin      <-  floor((alpha * lenY))
-    allWindows  <-  combn(lenY, 2)
+##' Get all possible windows
+##'
+##' @title Get all possible windows between specified alpha 
+##' and 1 
+##' @param x A numeric vector
+##' @details This function is a dependency for \code{findLocLin}
+##' where it is used to extract all local windows
+##' for local regressions. alpha must be higher than 0 and lower or equal to 1. 
+##' @return A matrix of vector positions, with starting value on first column and ending value on second column.
+##' @export
+getWindows  <-  function(x, alpha) {
+    checkNumeric(x)
+    validAlpha  <-  alpha > 0 & alpha <= 1
+    if(!validAlpha)
+        stop('alpha must take a value higher than 0 and lower or equal to 1')
+    lenX        <-  length(x)
+    minWin      <-  floor((alpha * lenX))
+    allWindows  <-  combn(lenX, 2)
     t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
 }
 
