@@ -124,7 +124,10 @@ locReg  <-  function(wins, xall, yall, ...) {
 #  THE MAIN WRAPPER FUNCTION -- findLocLin():
 #############
 findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'pc'),
-                         plots=TRUE, plotName='testPlots.pdf.', ...) {
+                         plots=TRUE, plotName='testPlots.pdf', ...) {
+    if(is.unsorted(xall))
+        warning("Dataset must be ordered by xall")
+        
     #  Get windows # 
     wins  <-  getWindows(y=yall, alpha)
     #  Fit Local Regressions  #
