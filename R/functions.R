@@ -116,7 +116,7 @@ getWindows  <-  function(x, alpha) {
 # flexibility in the findLocLin() function will come from minor modifications to this
 # bit of code.
 
-locReg  <-  function(wins, xall, yall, ...) {
+locReg  <-  function(wins, xall, yall, resids=FALSE, ...) {
     #  Grab data window for local regression  #
     x  <-  xall[wins[1]:wins[2]]
     y  <-  yall[wins[1]:wins[2]]
@@ -130,17 +130,22 @@ locReg  <-  function(wins, xall, yall, ...) {
     # BG test for serial correlation #
 	BGtest  <-  breuschGodfrey(y, x, order=FALSE)
     bgN     <-  as.numeric(BGtest$bgN)
-    data.frame(
-        Lbound   =  wins[1],
-        Rbound   =  wins[2],
-        alph     =  length(wins[1]:wins[2]) / length(yall),
-        b0       =  bHat[1],
-        b1       =  bHat[2],
-        b1LoCI   =  b1CI[1],
-        b1UpCI   =  b1CI[2],
-        skew     =  skew(x=(lmFit$residuals / lmFit$df.residual)),
-        bgN      =  bgN
-    )
+    out     <-  data.frame(
+                           Lbound   =  wins[1],
+                           Rbound   =  wins[2],
+                           alph     =  length(wins[1]:wins[2]) / length(yall),
+                           b0       =  bHat[1],
+                           b1       =  bHat[2],
+                           b1LoCI   =  b1CI[1],
+                           b1UpCI   =  b1CI[2],
+                           skew     =  skew(x=(lmFit$residuals / lmFit$df.residual)),
+                           bgN      =  bgN
+                          )
+    if(resids) {
+        sigmaHatUb     <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
+        out$residuals  <-  lmFit$residuals / (sqrt(sigmaHatUb))
+    }
+    out
 }
 
 ################################################################
@@ -213,36 +218,6 @@ outputHist  <-  function(resultsTable) {
     hist(resultsTable$b1, breaks=25)
 }
 
-##############################
-#  Dependency -- bestLocReg():
-##############################
-# for use with plotBest() -- slight modification of LocReg, that
-#  accepts the best window chosen by the user instead of subsetting
-#  the dataset. Also uses a list() to output objects of different
-#  length (e.g. bHat and stdResid).
-
-bestLocReg  <-  function(bestwin, y, x, verbose=TRUE, ...) {
-    # Design Matrix #
-    X  <-  matrix(cbind(1, x), ncol=2)
-    # OLS Regression #
-    lmFit   <-  lm.fit(x=X, y=y)
-    bHat    <-  coefficients(lmFit)
-    vc      <-  chol2inv(lmFit$qr$qr) * sum(lmFit$residuals^2) / lmFit$df.residual
-    b1CI    <-  bHat[2] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vc))[2]
-    sigmaHatUb  <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
-    BGtest  <-  breuschGodfrey(y, x, order=FALSE)
-    bgN     <-  as.numeric(BGtest$bgN)
-    list(
-        'BestWindow' =  bestwin,
-        'bHat'       =  bHat,
-        'yHat'       =  lmFit$fitted,
-        'stdResids'  =  lmFit$residuals / (sqrt(sigmaHatUb)),
-        'skew'       =  skew(x = (lmFit$residuals / lmFit$df.residual)),
-        'b1CI'       =  b1CI,
-        'bg'         =  bgN
-    )
-}
-
 ###################################################
 #  plotBest():
 #
@@ -261,13 +236,13 @@ bestLocReg  <-  function(bestwin, y, x, verbose=TRUE, ...) {
 #
 ###################################################
 
-plotBest <- function(res, yall, xall, best=1) {
+plotBest <- function(res, xall, yall, best=1) {
     #  Recover data window for chosen local regression model  #
     bestwin  <-  c(res$res$Lbound[best], res$res$Rbound[best])
     y        <-  yall[bestwin[1]:bestwin[2]]
     x        <-  xall[bestwin[1]:bestwin[2]]
     #  Fit block  #
-    LocFit  <-  bestLocReg(bestwin, y=y, x=x)
+    LocFit  <-  locReg(bestwin, xall, yall, resids=TRUE)
     b1      <-  LocFit$bHat[2]
 
     #  Residual Plots  #
