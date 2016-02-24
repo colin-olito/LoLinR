@@ -1,23 +1,4 @@
 ################################################################
-#  Functions and Dependencies for the primary function findLocLin(), used to find
-#  the 'most linear' local regressions from a given dataset.
-#
-#  Run these functions
-
-library(lmtest)
-
-################################################################
-#  Dependency -- Function triCube():
-#
-# triCube() is a function to calculate Tri-Cube weights for a given vector of values
-# for an independent variable. This function is a dependency for findLocLin(), and is
-# used to calculate the weights for Weighted Least Squares Regression.
-triCube <-  function(x, m, h) {
-    z  <-  abs(x - m) / h
-    ifelse(z < 1, (1 - z^3)^3, 0)
-}
-
-################################################################
 #  Dependency -- perc.rank():
 #
 # pcRank() is a function to calculate the percentile values of a vector x.
@@ -115,8 +96,6 @@ locReg  <-  function(wins, xall, yall, ...) {
     # BG test for serial correlation #
 	BGtest  <-  breuschGodfrey(y, x, order=FALSE)
     bgN     <-  as.numeric(BGtest$bgN)
-#    BGtest2   <-  bgtest(y ~ x, order=(nrow(X) - 3))
-#    bgN2      <-  as.numeric(BGtest$statistic) / nrow(X)
     data.frame(
         Lbound   =  wins[1],
         Rbound   =  wins[2],
