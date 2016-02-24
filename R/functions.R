@@ -17,19 +17,23 @@ pcRank <- function(x) {
     percentiles
 }
 
-################################################################
-#  Dependency -- Function skew():
-#
-# skew() is a function to calculate the Fisher-Pearson Standardized Third Moment
-# Coefficient for a given vector of numbers. This function is a dependency for
-# findLocLin(), and is used to calculate the skewness of standardized residuals.
-
-# Note: Compare to moments package
-skew  <-  function(x) {
+##' Sample skewness
+##'
+##' @title Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient)
+##' @param x A numeric vector.
+##' @details This function is a dependency for \code{findLocLin}
+##' where it is used to calculate the (sample) skewness of standardized residuals.
+##' @return A numeric vector of length 1
+##' @export
+skew  <-  function(x, na.rm=TRUE) {
+    xNumeric  <-  is.numeric(x)
+    if(!xNumeric)
+        stop('x must be numeric') 
+    if(na.rm)
+        x  <-  x[!is.na(x)]
     n  <-  length(x)
     (n/((n - 1) * (n - 2))) * sum(((x - mean(x)) / sd(x))^3)
 }
-
 
 ################################################################
 # Dependency -- breuschGodfrey():
