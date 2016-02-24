@@ -1,9 +1,20 @@
-################################################################
-#  Dependency -- perc.rank():
-#
-# pcRank() is a function to calculate the percentile values of a vector x.
+## Main package functions
+
+##' Calculate the percentile values of a vector x
+##'
+##' @title Calculate the percentile values of a vector x
+##' @param x A numeric vector.
+##' @return A numeric vector of percentiles truncated between 0 and 1
+##' @export
 pcRank <- function(x) {
-    trunc(rank(x, na.last=NA)) / sum(!is.na(x))
+    xNumeric  <-  is.numeric(x)
+    if(!xNumeric)
+        stop('x must be numeric') 
+    percentiles  <-  trunc(rank(x, na.last=NA)) / sum(!is.na(x))
+    allUnique    <-  length(percentiles) == length(unique(percentiles))
+    if(!allUnique)
+        warning('input/output have ties')
+    percentiles
 }
 
 ################################################################
