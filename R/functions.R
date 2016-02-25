@@ -59,9 +59,38 @@ skew  <-  function(x, na.rm=TRUE) {
 ###############
 
 
-# NOTE: This code is (very slightly) modified from bgtest.R
-#        from the lmtest github repo. I have stripped it down
-#       to minimal functionality for our purposes
+
+##' Breusch-Godfrey Statistic
+##'
+##' @title Modified Breusch-Godfrey Statistic ((n*R^2)/n)
+##' @param x A numeric vector
+##' @param y A numeric vector
+##' @param order Order to which residuals are lagged. Defaults to \code{order <- (n - k - 1)},
+##' where \code{n} is the number of observations, and \code{k} is the number of parameters
+##' in the regression (2 by default). This represents the highest possible order given \code{n}.
+##' @param fill Defaults to \code{fill = 0}, used to fill model matrix for lagged residuas in 
+##' the auxillary regression.
+
+##' @details NOTE: This function is a (very slightly) modified version 
+##' of \code{bgtest()} from the \code{\link{lmtest}} package (available at 
+##' \link{https://github.com/cran/lmtest/blob/master/R/bgtest.R}).
+##' We have stripped it down to minimal functionality for our purposes.
+##' All development credit goes to the authors of \code{\link{lmtest}}.
+##'
+##' This function is a dependency for \code{rankLocReg} where it is
+##' used to calculate the Breusch-Godfrey statistic divided by the number 
+##' of ovservations ((n*R^2)/n). For the purposes of \code{rankLocReg}, 
+##' only the relative variance explained by the fitted values from the
+##' auxillary regression and the residuals of the original regression is of
+##' interest. Calculating ((n*R^2)/n) preserves this information, while 
+##' avoiding the introduction of strong covariance between bgN and n; an 
+##' undesirable behaviour for the linearity metric L. If desired, users can 
+##' reproduce a standard Breusch-Godfrey Chi-squared test of significance 
+##' by using running \code{qchisq()} with the output \code{bgN} and \code{df}.
+##' However, we would recommend using the function \code{bgtest()} from the
+##' package \code{lmtest}, as it is specifically designed for this purpose.
+##' @return A list with: the standard BG statistic (bg), BG/n (bgN), and d.f. (df)
+##' @export
 breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     X  <-  matrix(cbind(1, x), ncol=2)
     n  <-  nrow(X) 
