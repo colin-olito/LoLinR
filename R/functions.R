@@ -1,5 +1,16 @@
 ## Main package functions
 
+##' Wrapper - strips NA from input x and y
+##'
+##' @title Remove NA
+##' @param x A numeric vector
+##' @param y A numeric vector
+##' @return a data.frame with complete.cases
+stripNAs  <-  function(x, y) {
+    dat  <-  data.frame(x, y)
+    dat[complete.cases(dat), ]
+}
+
 ##' Wrapper - check if vector is numeric
 ##'
 ##' @title Wrapper for \code{is.numeric}
@@ -55,11 +66,13 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     X  <-  matrix(cbind(1, x), ncol=2)
     n  <-  nrow(X) 
     k  <-  ncol(X)
+    
     if(order) {
         order  <-  1:order
     } else {
         order  <-  1:(n - k - 1)
     }
+    
     m       <-  length(order)
     resids  <-  lm.fit(X, y)$residuals
     Z       <-  sapply(order, function(x) c(rep(fill, length.out=x), resids[1:(n - x)]))
@@ -116,20 +129,24 @@ getWindows  <-  function(x, alpha) {
 # flexibility in the findLocLin() function will come from minor modifications to this
 # bit of code.
 
-locReg  <-  function(wins, xall, yall, resids=FALSE, ...) {
-    #  Grab data window for local regression  #
+locReg  <-  function(wins, xall, yall, resids=FALSE) {
+    #  grab data window for local regression
     x  <-  xall[wins[1]:wins[2]]
     y  <-  yall[wins[1]:wins[2]]
-    # Design Matrix #
+    
+    # design matrix
     X  <-  matrix(cbind(1, x), ncol=2)
-    # OLS Regression #
+    
+    # OLS regression
     lmFit    <-  lm.fit(x=X, y=y)
     bHat     <-  coefficients(lmFit)
     vc       <-  chol2inv(lmFit$qr$qr) * sum(lmFit$residuals^2) / lmFit$df.residual
     b1CI     <-  bHat[2] + qt(c(0.025, 0.975), df=(length(x) - 2)) * sqrt(diag(vc))[2]
-    # BG test for serial correlation #
+    
+    # breuschGodfrey test for serial correlation
 	BGtest  <-  breuschGodfrey(y, x, order=FALSE)
     bgN     <-  as.numeric(BGtest$bgN)
+    
     out     <-  data.frame(
                            Lbound   =  wins[1],
                            Rbound   =  wins[2],
@@ -140,7 +157,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE, ...) {
                            b1UpCI   =  b1CI[2],
                            skew     =  skew(x=(lmFit$residuals / lmFit$df.residual)),
                            bgN      =  bgN
-                          )
+                )
     if(resids) {
         sigmaHatUb     <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
         out$residuals  <-  lmFit$residuals / (sqrt(sigmaHatUb))
@@ -151,71 +168,77 @@ locReg  <-  function(wins, xall, yall, resids=FALSE, ...) {
 ################################################################
 #  THE MAIN WRAPPER FUNCTION -- findLocLin():
 #############
-findLocLin  <-  function(yall, xall, alpha, refB1=FALSE, method=c('ns', 'eq', 'pc'),
-                         plots=TRUE, plotName='testPlots.pdf', ...) {
+rankLocLin  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TRUE, verbose=TRUE) {
     if(is.unsorted(xall))
         warning("Dataset must be ordered by xall")
         
-    #  Get windows # 
+    # make sure that all NAs are dealt with
+    dat   <-  stripNAs(xall, yall)
+    xall  <-  dat$x
+    yall  <-  dat$y
+
+    #  get all possible windows
     wins  <-  getWindows(y=yall, alpha)
-    #  Fit Local Regressions  #
-    res   <-  apply(wins, 1, locReg, xall=xall, yall=yall)
-    res   <-  do.call(rbind.data.frame, res)
-    #  Calculate combined metric (L) for linearity & fit  #
-    res$ciRange  <-  res$b1UpCI - res$b1LoCI
-    res          <-  res[, c('Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN')]
-    res$L        <-  ((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) + ((res$bgN - min(res$bgN)) / sd(res$bgN)) + ((res$ciRange - min(res$ciRange)) / sd(res$ciRange))
-    res$Leq      <-  (((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew)) / (max(((min(abs(res$skew)) + abs(res$skew)) / sd(res$skew))))) + (((res$bgN - min(res$bgN)) / sd(res$bgN)) / (max(((res$bgN - min(res$bgN)) / sd(res$bgN))))) + (((res$ciRange - min(res$ciRange)) / sd(res$ciRange)) / (max(((res$ciRange - min(res$ciRange)) / sd(res$ciRange)))))
-    res$Lpc      <-  ((pcRank(abs(res$skew))) + (pcRank((res$bgN - min(res$bgN)))) + (pcRank((res$ciRange)))) / 3
     
+    #  fit local regressions
+    allRegs   <-  apply(wins, 1, locReg, xall=xall, yall=yall)
+    allRegs   <-  do.call(rbind.data.frame, allRegs)
+    
+    #  calculate combined metric (L) for linearity & fit
+    allRegs$ciRange  <-  allRegs$b1UpCI - allRegs$b1LoCI
+    allRegs          <-  allRegs[, c('Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN')]
+    allRegs$L        <-  ((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew)) + ((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN)) + ((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange))
+    allRegs$Leq      <-  (((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew)) / (max(((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew))))) + (((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN)) / (max(((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN))))) + (((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange)) / (max(((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange)))))
+    allRegs$Lpc      <-  ((pcRank(abs(allRegs$skew))) + (pcRank((allRegs$bgN - min(allRegs$bgN)))) + (pcRank((allRegs$ciRange)))) / 3
+    
+    # choose weighting scheme for linearity metric L
     switch(match.arg(method),
         'ns' = {
-            res   <-  res[with(res, order(L)), ]
+            allRegs   <-  allRegs[with(allRegs, order(L)), ]
         },
         'eq' = {
-            res   <-  res[with(res, order(Leq)), ]
+            allRegs   <-  allRegs[with(allRegs, order(Leq)), ]
         },
         'pc' = {
-            res   <-  res[with(res, order(Lpc)), ]
+            allRegs   <-  allRegs[with(allRegs, order(Lpc)), ]
         }
     )
     
-    numericB1  <-  is.numeric(refB1)
-    if(numericB1) {
-        res  <-  res[with(res, order(abs(refB1 - res$b1))), ]
-    } 
-
-    #  Plots to accompany best results  #
+    #  plots to accompany best local regression
     if(plots) {        
         dev.new(height=15, width=15)
-        outputPlot(res, xall, yall)
+        outputPlot(allRegs, xall, yall)
     }
-    nFits  <-  print(nrow(res))
+    
+    nFits  <-  nrow(allRegs)
+    if(verbose)
+        cat(sprintf('rankLocLin fitted %d local regressions', nFits), '\n')
+    
     list(
-        'nFits'  =  nFits,
-        'res'    =  res
+        'nFits'    =  nFits,
+        'allRegs'  =  allRegs
     )
 }
 
 ####################
 # PLOTTING FUNCTIONS
 ####################
-outputPlot  <-  function(resultsTable, x, y) {
+outputPlot  <-  function(allRegs, x, y) {
     col1  <-  adjustcolor('#1B6889', alpha=0.5)
     par(mfrow=c(5,5))
-    for(i in seq_len(nrow(resultsTable))) {
+    for(i in seq_len(nrow(allRegs))) {
         # Subset Data #
-        ytemp  <-  y[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
-        xtemp  <-  x[c(resultsTable$Lbound[i]:resultsTable$Rbound[i])]
+        ytemp  <-  y[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
+        xtemp  <-  x[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
         # Plot #
         plot(y ~ x, pch=21, col='grey80', main=i)
         points(ytemp ~ xtemp, pch=21, bg=col1, ask=TRUE)
-        abline(coef=c(resultsTable$b0[i],resultsTable$b1[i]), col=2)
+        abline(coef=c(allRegs$b0[i],allRegs$b1[i]), col=2)
     }
 }
 
-outputHist  <-  function(resultsTable) {
-    hist(resultsTable$b1, breaks=25)
+outputHist  <-  function(allRegs) {
+    hist(allRegs$b1, breaks=25)
 }
 
 ###################################################
@@ -236,18 +259,20 @@ outputHist  <-  function(resultsTable) {
 #
 ###################################################
 
-plotBest <- function(res, xall, yall, best=1) {
-    #  Recover data window for chosen local regression model  #
-    bestwin  <-  c(res$res$Lbound[best], res$res$Rbound[best])
+plotBest <- function(allRegs, xall, yall, best=1) {
+    #  Recover data window for chosen local regression model
+    bestwin  <-  c(allRegs$allRegs$Lbound[best], allRegs$allRegs$Rbound[best])
     y        <-  yall[bestwin[1]:bestwin[2]]
     x        <-  xall[bestwin[1]:bestwin[2]]
-    #  Fit block  #
+    
+    #  fit block
     LocFit  <-  locReg(bestwin, xall, yall, resids=TRUE)
     b1      <-  LocFit$bHat[2]
 
-    #  Residual Plots  #
+    #  residual plots
     dev.new()
-    # Standardized Residuals ~ x
+    
+    # standardized residuals ~ x
     par(mfrow=c(2,2))
     plot(LocFit$stdResid ~ x, xlab='x', ylab='y', main='Std. Residuals ~ x')
     abline(h=0, col=1, lwd=2)
