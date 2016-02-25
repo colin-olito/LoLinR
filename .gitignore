@@ -87,3 +87,7 @@ vignettes/*.pdf
 .Rhistory
 .RData
 >>>>>>> LocFit
+
+checkPackage.R
+LoLinR.Rcheck/
+LoLinR*tar.gz
