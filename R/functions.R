@@ -279,18 +279,22 @@ plotBest <- function(allRegs, xall, yall, best=1) {
     abline(h=c(-2, 2), lty=2)
     lf1  <-  loess(LocFit$stdResid ~ x)
     points(x, lf1$fitted, type='l', col=2, lwd=2)
-    # Standardized Residuals ~ Fitted Values
+    
+    # standardized residuals ~ fitted values
     plot(LocFit$stdResid ~ LocFit$yHat, xlab='Fitted Values',ylab='Standardized Residuals',main='Std. Residuals ~ Fitted Values')
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf2  <-  loess(LocFit$stdResid ~ LocFit$yHat)
     points(LocFit$yHat, lf2$fitted, type='l', col=2, lwd=2)
-    # QQNorm Plot of Standardized Residuals #
+    
+    # qqnorm plot of standardized residuals
     qqnorm(LocFit$stdResid, main='QQNorm plot of Std. Residuals')
     qqline(LocFit$stdResid, col=2)
-    # Histogram of Standardized Residuals #
+    
+    # histogram of standardized residuals
     hist(LocFit$stdResid, xlab='Standardized Residuals', ylab='Density', breaks=20, main='Density Plot of Std. Residuals')
-    #  Overall Regression Plot  #
+    
+    #  overall regression plot
     dev.new()
     col1  <-  adjustcolor('#1B6889', alpha=0.5)
     plot(yall ~ xall, pch=21, col='grey80', ask=TRUE, main=expression(paste('Best Local Regression: ', beta[1],' = ', b1)))
