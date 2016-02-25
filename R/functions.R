@@ -209,11 +209,31 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
     out
 }
 
+##' Wrapper - calls function that creates class rankLocReg
+##'
+##' @title rankLocReg
+##' @param x A numeric vector
+##' @param ... Additional arguments to \code{rankLocReg.default}
+##' @return Default function \code{rankLocReg.default}
+##' @seealso \code{rankLocReg.default}
+##' @export
 rankLocReg <- function(x, ...) {
     UseMethod('rankLocReg')
 }
 
-rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TRUE, verbose=TRUE) {
+##' Ranking local linear regressions
+##'
+##' @title Ranking local linear regressions
+##' @param xall A numeric vector
+##' @param yall A numeric vector
+##' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
+##' @param method Ranking method. See details.
+##' @param verbose Logical. Should progress be printed?
+##' @details 
+##' @return A data frame with local regressions ranked by metric L following raking method chosen by argument \code{method}.
+##' @seealso \code{\link{locReg}}
+##' @export
+rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     if(is.unsorted(xall))
         warning("Dataset must be ordered by xall")
         
@@ -249,12 +269,6 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
         }
     )
     
-    #  plots to accompany best local regression
-    if(plots) {        
-        dev.new(height=15, width=15)
-        outputPlot(allRegs, xall, yall)
-    }
-    
     nFits  <-  nrow(allRegs)
     if(verbose)
         cat(sprintf('rankLocReg fitted %d local regressions', nFits), '\n')
@@ -276,23 +290,15 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
 # PLOTTING FUNCTIONS
 ####################
 
-###################################################
-#  plotBest():
-#
-#  Followup function for use with findLocLin(). Generates residual
-#    plots and stand alone scatterplot for a local linear regression
-#    chosen by the user from the findLocLin() output data frame.
-#
-#    Takes 5 arguments:
-#      -- res:  findLocLin() output data frame
-#      -- yall:  Same yall input data as for findLocLin()
-#      -- xall:  Same xall input data as for findLocLin()
-#      -- best:  row number corresponding to the local linear
-#                 regression from findLocLIn output the user
-#                 wishes to plot/inspect. Usually the 'best'
-#                 linear regression.
-#
-###################################################
+##' Plotting chosen local linear regression
+##'
+##' @title Plotting chosen local linear regression
+##' @param allRegs An object of class \code{rankLocReg}
+##' @param rank Position, as in row number from input \code{allRegs}, of local regression to be plotted.
+##' @details Generates a scatterplot + residual-plot diagnostics for chosen local regression
+##' @return A 5-plot panel
+##' @seealso \code{rankLocReg.default}
+##' @export
 plot.rankLocReg  <-  function(allRegs, rank=1) {
     #  recover data window for chosen local regression model
     bestwin  <-  c(allRegs$allRegs$Lbound[rank], allRegs$allRegs$Rbound[rank])
@@ -394,33 +400,81 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     }
 }
 
-outputPlot  <-  function(allRegs, x, y) {
-    col1  <-  adjustcolor('#1B6889', alpha=0.5)
-    par(mfrow=c(5,5))
-    for(i in seq_len(nrow(allRegs))) {
-        # Subset Data #
-        ytemp  <-  y[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
-        xtemp  <-  x[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
-        # Plot #
-        plot(y ~ x, pch=21, col='grey80', main=i)
-        points(ytemp ~ xtemp, pch=21, bg=col1, ask=TRUE)
-        abline(coef=c(allRegs$b0[i],allRegs$b1[i]), col=2)
+##' Plotting 25 best local linear regressions
+##'
+##' @title Plotting 25 best local linear regressions
+##' @param allRegs An object of class \code{rankLocReg}
+##' @details Generates scatterplots for 25 best local regressions
+##' @return A 25-plot panel
+##' @seealso \code{rankLocReg.default}
+##' @export
+outputRankLocRegPlot  <-  function(allRegs) {
+    dev.new(width=7, height=7)
+    par(mfrow=c(5,5), omi=rep(1, 4), mai=rep(0,4), cex=1)
+    locFit  <-  allRegs$allRegs
+
+    for(i in 1:25) {
+        # subset data
+        outy  <-  allRegs$yall[c(1:(locFit$Lbound[i]-1), (locFit$Rbound[i]+1):length(allRegs$yall))]
+        outx  <-  allRegs$xall[c(1:(locFit$Lbound[i]-1), (locFit$Rbound[i]+1):length(allRegs$yall))]
+        y     <-  allRegs$yall[locFit$Lbound[i]:locFit$Rbound[i]]
+        x     <-  allRegs$xall[locFit$Lbound[i]:locFit$Rbound[i]]
+
+        # plot
+        plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
+        usr  <-  par('usr')
+        rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+        whiteGrid()
+        box()
+
+        # check whether axes and labels are to be plotted
+        if(i %in% seq(1, 21, 5))
+            axis(2, las=1, cex.axis=0.5)
+        if(i %in% 21:25)
+            axis(1, cex.axis=0.5, mgp=c(3, 0.5, 0))
+        
+        points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
+        points(y ~ x, col='dodgerblue', cex=0.8)
+        lines(x, locFit$b0[i] + locFit$b1[i]*x, col='black', lwd=2, lty=2)
+        proportionalLabel(0.95, 0.9, i, cex=0.7, font=3, adj=c(1, 0.5))
+        proportionalLabel(0.03, 0.1, substitute(italic(y) == a~sy~b%.%italic(x), list(a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
     }
 }
 
-plotBeta1 <- function(results) {
-    c1  <-  adjustcolor('#A67A01', alpha=0.75)
-    c2  <-  adjustcolor('#6D65FA', alpha=0.75)
-    c3  <-  adjustcolor('#B6084E', alpha=0.75)
-    dev.new()
-    par(mfrow=c(1, 1))
-    plot(density(results$res$b1), lwd=4, col=col1, xlab=expression(paste(beta[1])), main=expression(paste('Distribution of ', beta[1])), cex.main=2)
-    abline(v=results$res$b1[results$res$L == min(results$res$L)], col=c1, lty=1, lwd=4)
-    abline(v=results$res$b1[results$res$Leq == min(results$res$Leq)], col=c2, lty=2, lwd=4)
-    abline(v=results$res$b1[results$res$Lpc == min(results$res$Lpc)], col=c3, lty=3, lwd=4)
+##' Distribution of all local slopes
+##'
+##' @title Distribution of all local slopes
+##' @param allRegs An object of class \code{rankLocReg}
+##' @details Generates a distribution of all local regression slopes
+##' @seealso \code{rankLocReg.default}
+##' @export
+plotBeta1 <- function(allRegs) {
+
+    c1  <-  'tomato'
+    c2  <-  'darkolivegreen'
+    c3  <-  'dodgerblue4'
+    
+    dev.new(width=7, height=7)
+    par(omi=rep(0.5, 4), cex=1)
+    locFit     <-  allRegs$allRegs
+    b1Density  <-  density(locFit$b1)
+
+    plot(NA, xlab=expression(paste(beta[1])), type='n', axes=FALSE, ylab='Density', cex.lab=1.2, xlim=range(b1Density$x), ylim=c(0, (max(b1Density$y)+0.05*max(b1Density$y))), yaxs='i')
+    proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=2)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    polygon(c(b1Density$x), c(b1Density$y), col=transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
+    axis(1)
+    axis(2, las=1)
+
+    abline(v=locFit$b1[locFit$L == min(locFit$L)], col=c1, lty=1, lwd=3)
+    abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
+    abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
-          x       =  min(results$res$b1) + (0.8 * (abs(range(results$res$b1)[2] - range(results$res$b1)[1]))),
-          y       =  0.95 * max(density(results$res$b1)$y),
+          x       =  min(locFit$b1) + (0.8 * (abs(range(locFit$b1)[2] - range(locFit$b1)[1]))),
+          y       =  0.95 * max(density(locFit$b1)$y),
           legend  =  c(expression(paste(italic(L))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),
@@ -431,21 +485,38 @@ plotBeta1 <- function(results) {
     )
 }
 
+##' Creates transparent colours
+##'
+##' @title Creates transparent colours
+##' @param col Colour
+##' @param opacity Relative y-axis position (in proportion) where character is to be plotted
+##' @author Richard G. FitzJohn.
 transparentColor <- function(col, opacity=0.5) {
     if (length(opacity) > 1 && any(is.na(opacity))) {
-        n <- max(length(col), length(opacity))
-        opacity <- rep(opacity, length.out=n)
-        col <- rep(col, length.out=n)
-        ok <- !is.na(opacity)
-        ret <- rep(NA, length(col))
-        ret[ok] <- Recall(col[ok], opacity[ok])
+        n        <-  max(length(col), length(opacity))
+        opacity  <-  rep(opacity, length.out=n)
+        col      <-  rep(col, length.out=n)
+        ok       <-  !is.na(opacity)
+        ret      <-  rep(NA, length(col))
+        ret[ok]  <-  Recall(col[ok], opacity[ok])
         ret
     } else {
-        tmp <- col2rgb(col)/255
+        tmp  <-  col2rgb(col)/255
         rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
     }
 }
 
+##' Plot text or points according to relative axis position
+##'
+##' @title Plot text or points according to relative axis position
+##' @param px Relative x-axis position (in proportion) where character is to be plotted
+##' @param py Relative y-axis position (in proportion) where character is to be plotted
+##' @param lab Plotted text. Works if argument \code{text} is TRUE.
+##' @param adj See argument of same name in R base function \code{par}
+##' @param text Logical. Should text or points be plotted?
+##' @param log Used if the original plot uses the argument log, e.g. log='x', log='y' or log='xy'
+##' @param ... Additional arguments to R base function \code{text}
+##' @author Adapted from original version by Richard G. FitzJohn.
 proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
     usr  <-  par('usr')
     x.p  <-  usr[1] + px*(usr[2] - usr[1])
@@ -467,6 +538,10 @@ proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ..
     }
 }
 
+##' Draw equally-spaced white lines on plot window
+##'
+##' @title Equally-spaced white lines on plot window
+##' @param ... Additional arguments to internal function \code{proportionalLabel}
 whiteGrid  <-  function(...) {
     proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
     proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
@@ -478,6 +553,12 @@ whiteGrid  <-  function(...) {
     proportionalLabel(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
 }
 
+##' Create nice rounded numbers for plotting
+##'
+##' @title Rounded numbers for plotting
+##' @param value A numeric vector
+##' @param precision number of rounding digits
+##' @return A character vector
 rounded  <-  function(value, precision=1) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }
@@ -485,7 +566,14 @@ rounded  <-  function(value, precision=1) {
 ######################
 # AUXILLIARY FUNCTIONS
 ######################
-summary.rankLocReg <- function(object, ...) {
+
+##' Summary for object of class \code{rankLocReg}
+##'
+##' @title Summary for object of class \code{rankLocReg}
+##' @param object An object of class \code{rankLocReg}
+##' @return A summary list with main features calculated by function \code{rankLocReg}
+##' @seealso \code{rankLocReg}
+summary.rankLocReg <- function(object) {
     out <- list(
                 call          =  object$call,
                 data          =  summary(data.frame(xall=object$xall, yall=object$yall)),
@@ -498,7 +586,13 @@ summary.rankLocReg <- function(object, ...) {
     out
 }
 
-print.summary.rankLocReg <- function(x, ...) {
+##' Wrapper summary for object of class \code{rankLocReg}
+##'
+##' @title Wrapper summary for object of class \code{rankLocReg}
+##' @param x An object of class \code{rankLocReg}
+##' @return A summary list with main features calculated by function \code{rankLocReg}
+##' @seealso \code{rankLocReg}, \code{summary.rankLocReg}
+print.summary.rankLocReg <- function(x) {
     cat('Call:\n')
     print(x$call)
     cat('\n')
