@@ -580,9 +580,11 @@ rounded  <-  function(value, precision=1) {
 #'
 #' @title Summary for object of class \code{rankLocReg}
 #' @param object An object of class \code{rankLocReg}
+#' @param ... additional arguments affecting the summary produced.
 #' @return A summary list with main features calculated by function \code{rankLocReg}
 #' @seealso \code{rankLocReg}
-summary.rankLocReg <- function(object) {
+#' @export
+summary.rankLocReg <- function(object, ...) {
     out <- list(
                 call          =  object$call,
                 data          =  summary(data.frame(xall=object$xall, yall=object$yall)),
@@ -599,9 +601,11 @@ summary.rankLocReg <- function(object) {
 #'
 #' @title Wrapper summary for object of class \code{rankLocReg}
 #' @param x An object of class \code{rankLocReg}
+#' @param ... further arguments passed to or from other methods.
 #' @return A summary list with main features calculated by function \code{rankLocReg}
 #' @seealso \code{rankLocReg}, \code{summary.rankLocReg}
-print.summary.rankLocReg <- function(x) {
+#' @export
+print.summary.rankLocReg <- function(x, ...) {
     cat('Call:\n')
     print(x$call)
     cat('\n')

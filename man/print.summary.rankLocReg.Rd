@@ -4,10 +4,12 @@
 \alias{print.summary.rankLocReg}
 \title{Wrapper summary for object of class \code{rankLocReg}}
 \usage{
-\method{print}{summary.rankLocReg}(x)
+\method{print}{summary.rankLocReg}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{rankLocReg}}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 A summary list with main features calculated by function \code{rankLocReg}

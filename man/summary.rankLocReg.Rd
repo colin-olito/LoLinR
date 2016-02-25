@@ -4,10 +4,12 @@
 \alias{summary.rankLocReg}
 \title{Summary for object of class \code{rankLocReg}}
 \usage{
-\method{summary}{rankLocReg}(object)
+\method{summary}{rankLocReg}(object, ...)
 }
 \arguments{
 \item{object}{An object of class \code{rankLocReg}}
+
+\item{...}{additional arguments affecting the summary produced.}
 }
 \value{
 A summary list with main features calculated by function \code{rankLocReg}
