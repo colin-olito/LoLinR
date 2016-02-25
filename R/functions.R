@@ -120,6 +120,7 @@ getWindows  <-  function(x, alpha) {
 #' by using running \code{qchisq()} with the output \code{bgN} and \code{df}.
 #' However, we would recommend using the function \code{bgtest()} from the
 #' package \code{lmtest}, as it is specifically designed for this purpose.
+#' @import lmtest
 #' @return A list with: the standard BG statistic (bg), BG/n (bgN), and d.f. (df)
 #' @export
 breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {

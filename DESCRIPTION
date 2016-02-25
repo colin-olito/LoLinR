@@ -10,5 +10,7 @@ Depends:
 	R (>= 3.2.2)
 License: GPL-2
 LazyData: true
+Imports:
+	lmtest
 Suggests: 
 	testthat
