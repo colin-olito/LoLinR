@@ -1,5 +1,6 @@
 # Local Linear Regression for Estmating Monotonic Biological Rates in R (LoLinR)
 
+[![Build Status](https://travis-ci.org/colin-olito/LoLinR.png?branch=master)](https://travis-ci.org/colin-olito/LoLinR)
 
 ## Documentation
 
