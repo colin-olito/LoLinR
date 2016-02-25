@@ -4,10 +4,12 @@
 \alias{plot.rankLocReg}
 \title{Plotting chosen local linear regression}
 \usage{
-\method{plot}{rankLocReg}(allRegs, rank = 1)
+\method{plot}{rankLocReg}(x, ..., rank = 1)
 }
 \arguments{
-\item{allRegs}{An object of class \code{rankLocReg}}
+\item{x}{An object of class \code{rankLocReg}}
+
+\item{...}{Other parameters to be passed through to plotting functions.}
 
 \item{rank}{Position, as in row number from input \code{allRegs}, of local regression to be plotted.}
 }

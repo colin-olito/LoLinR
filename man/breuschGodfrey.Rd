@@ -26,10 +26,10 @@ Breusch-Godfrey Statistic
 }
 \details{
 NOTE: This function is a (very slightly) modified version
-of \code{bgtest()} from the \code{\link{lmtest}} package (available at
-\link{https://github.com/cran/lmtest/blob/master/R/bgtest.R}).
+of \code{bgtest()} from the \code{lmtest} package (available at
+https://github.com/cran/lmtest/blob/master/R/bgtest.R).
 We have stripped it down to minimal functionality for our purposes.
-All development credit goes to the authors of \code{\link{lmtest}}.
+All development credit goes to the authors of \code{lmtest}.
 
 This function is a dependency for \code{rankLocReg} where it is
 used to calculate the Breusch-Godfrey statistic divided by the number

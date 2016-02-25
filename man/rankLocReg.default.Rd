@@ -28,6 +28,6 @@ Ranking local linear regressions
 To be completed.
 }
 \seealso{
-\code{\link{locReg}}
+\code{locReg}
 }
 

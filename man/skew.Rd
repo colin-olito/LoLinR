@@ -8,6 +8,8 @@ skew(x, na.rm = TRUE)
 }
 \arguments{
 \item{x}{A numeric vector}
+
+\item{na.rm}{Logical. Should NAs be removed?}
 }
 \value{
 A numeric vector of length 1

@@ -9,6 +9,8 @@ getWindows(x, alpha)
 }
 \arguments{
 \item{x}{A numeric vector}
+
+\item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
 }
 \value{
 A matrix of vector positions, with starting value on first column and ending value on second column.

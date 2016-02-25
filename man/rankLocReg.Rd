@@ -4,12 +4,18 @@
 \alias{rankLocReg}
 \title{rankLocReg}
 \usage{
-rankLocReg(x, ...)
+rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{xall}{A numeric vector}
 
-\item{...}{Additional arguments to \code{rankLocReg.default}}
+\item{yall}{A numeric vector}
+
+\item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
+
+\item{method}{Ranking method. See details.}
+
+\item{verbose}{Logical. Should progress be printed?}
 }
 \value{
 Default function \code{rankLocReg.default}
