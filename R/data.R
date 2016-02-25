@@ -16,11 +16,19 @@ NULL
 #' @docType data
 NULL
 
-#' Dataset 3
+#' O2 consumption data for sea urchins
 #'
-#' A dataset containing blah
+#' A dataset containing VO2 time series for 4 indivudal sea urchins.
+#'  The variables are as follows
 #'
-#' @format A data frame with ... rows and ... variables:
+#' @format A data frame with 166 rows and 5 variables:
+#' \itemize{
+#'		\item time: time in minutes
+#'		\item A: Volume O2 (mL) data for urchin A
+#'		\item B: Volume O2 (mL) data for urchin B
+#'		\item C: Volume O2 (mL) data for urchin C
+#'		\item D: Volume O2 (mL) data for urchin D
+#' }
 #' @name TestO2data
 #' @docType data
 NULL

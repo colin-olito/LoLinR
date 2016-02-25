@@ -3,9 +3,17 @@
 \docType{data}
 \name{TestO2data}
 \alias{TestO2data}
-\title{Dataset 3}
-\format{A data frame with ... rows and ... variables:}
+\title{O2 consumption data for sea urchins}
+\format{A data frame with 166 rows and 5 variables:
+\itemize{
+		\item time: time in minutes
+		\item A: Volume O2 (mL) data for urchin A
+		\item B: Volume O2 (mL) data for urchin B
+		\item C: Volume O2 (mL) data for urchin C
+		\item D: Volume O2 (mL) data for urchin D
+}}
 \description{
-A dataset containing blah
+A dataset containing VO2 time series for 4 indivudal sea urchins.
+ The variables are as follows
 }
 
