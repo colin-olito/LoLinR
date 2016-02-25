@@ -525,7 +525,7 @@ transparentColor <- function(col, opacity=0.5) {
 #' @param text Logical. Should text or points be plotted?
 #' @param log Used if the original plot uses the argument log, e.g. log='x', log='y' or log='xy'
 #' @param ... Additional arguments to R base function \code{text}
-#' @author Adapted from original version by Richard G. FitzJohn.
+#' @author Adapted by Diego Barneche from original version by Richard G. FitzJohn.
 proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
     usr  <-  par('usr')
     x.p  <-  usr[1] + px*(usr[2] - usr[1])
