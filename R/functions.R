@@ -1,5 +1,60 @@
 ## Main package functions
 
+transparentColor <- function(col, opacity=0.5) {
+    if (length(opacity) > 1 && any(is.na(opacity))) {
+        n <- max(length(col), length(opacity))
+        opacity <- rep(opacity, length.out=n)
+        col <- rep(col, length.out=n)
+        ok <- !is.na(opacity)
+        ret <- rep(NA, length(col))
+        ret[ok] <- Recall(col[ok], opacity[ok])
+        ret
+    } else {
+        tmp <- col2rgb(col)/255
+        rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
+    }
+}
+
+proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
+    usr  <-  par('usr')
+    x.p  <-  usr[1] + px*(usr[2] - usr[1])
+    y.p  <-  usr[3] + py*(usr[4] - usr[3])
+    if(log=='x') {
+        x.p<-10^(x.p)
+    }
+    if(log=='y') {
+        y.p<-10^(y.p)
+    }
+    if(log=='xy') {
+        x.p<-10^(x.p)
+        y.p<-10^(y.p)
+    }
+    if(text){
+        text(x.p, y.p, lab, adj=adj, ...)
+    } else {
+        points(x.p, y.p, ...)
+    }
+}
+
+whiteGrid  <-  function(...) {
+    proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.6, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.8, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.2, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.4, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.6, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+}
+
+rounded  <-  function(value, precision=1, change=FALSE) {
+  if(change) {
+    value  <-  value * -1
+  }
+  sprintf(paste0('%.', precision, 'f'), round(value, precision))
+}
+
+
 ##' Wrapper - strips NA from input x and y
 ##'
 ##' @title Remove NA
@@ -169,7 +224,6 @@ getWindows  <-  function(x, alpha) {
 # function will consist of the 'guts' of the Fit Block... I imagine that much of the
 # flexibility in the findLocLin() function will come from minor modifications to this
 # bit of code.
-
 locReg  <-  function(wins, xall, yall, resids=FALSE) {
     # check equal lengths of x and y
     checkEqualLength(xall, yall)
@@ -189,7 +243,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
     
     # breuschGodfrey test for serial correlation
 	BGtest  <-  breuschGodfrey(y, x, order=FALSE)
-    bgN     <-  as.numeric(BGtest$bgN)
+    bgN     <-  BGtest$bgN
     
     out     <-  data.frame(
                            Lbound   =  wins[1],
@@ -202,9 +256,14 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
                            skew     =  skew(x=(lmFit$residuals / lmFit$df.residual)),
                            bgN      =  bgN
                 )
+    
     if(resids) {
-        sigmaHatUb     <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
-        out$residuals  <-  lmFit$residuals / (sqrt(sigmaHatUb))
+        sigmaHatUb  <-  sum((lmFit$residuals)^2) / (lmFit$df.residual)
+        out         <-  list(
+                            table      =  out, 
+                            residuals  =  lmFit$residuals / (sqrt(sigmaHatUb)),
+                            yHat       =  lmFit$fitted
+                        )
     }
     out
 }
@@ -212,7 +271,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 ################################################################
 #  THE MAIN WRAPPER FUNCTION -- findLocLin():
 #############
-rankLocLin  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TRUE, verbose=TRUE) {
+rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TRUE, verbose=TRUE) {
     if(is.unsorted(xall))
         warning("Dataset must be ordered by xall")
         
@@ -222,7 +281,7 @@ rankLocLin  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TR
     yall  <-  dat$y
 
     #  get all possible windows
-    wins  <-  getWindows(y=yall, alpha)
+    wins  <-  getWindows(x=yall, alpha)
     
     #  fit local regressions
     allRegs   <-  apply(wins, 1, locReg, xall=xall, yall=yall)
@@ -256,12 +315,21 @@ rankLocLin  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TR
     
     nFits  <-  nrow(allRegs)
     if(verbose)
-        cat(sprintf('rankLocLin fitted %d local regressions', nFits), '\n')
+        cat(sprintf('rankLocReg fitted %d local regressions', nFits), '\n')
     
-    list(
-        'nFits'    =  nFits,
-        'allRegs'  =  allRegs
-    )
+    out  <-  list(
+                 'nFits'    =  nFits,
+                 'allRegs'  =  allRegs,
+                 'xall'     =  xall,
+                 'yall'     =  yall
+             )
+
+    class(out)  <-  'rankLocReg'
+    out
+}
+
+rankLocReg <- function(x, ...) {
+    UseMethod('rankLocReg')
 }
 
 ####################
@@ -281,10 +349,6 @@ outputPlot  <-  function(allRegs, x, y) {
     }
 }
 
-outputHist  <-  function(allRegs) {
-    hist(allRegs$b1, breaks=25)
-}
-
 ###################################################
 #  plotBest():
 #
@@ -302,48 +366,105 @@ outputHist  <-  function(allRegs) {
 #                 linear regression.
 #
 ###################################################
-
-plotBest <- function(allRegs, xall, yall, best=1) {
-    #  Recover data window for chosen local regression model
-    bestwin  <-  c(allRegs$allRegs$Lbound[best], allRegs$allRegs$Rbound[best])
-    y        <-  yall[bestwin[1]:bestwin[2]]
-    x        <-  xall[bestwin[1]:bestwin[2]]
+plot.rankLocReg  <-  function(allRegs, rank=1) {
+    #  recover data window for chosen local regression model
+    bestwin  <-  c(allRegs$allRegs$Lbound[rank], allRegs$allRegs$Rbound[rank])
+    y        <-  allRegs$yall[bestwin[1]:bestwin[2]]
+    x        <-  allRegs$xall[bestwin[1]:bestwin[2]]
     
     #  fit block
-    LocFit  <-  locReg(bestwin, xall, yall, resids=TRUE)
-    b1      <-  LocFit$bHat[2]
+    fit     <-  locReg(bestwin, allRegs$xall, allRegs$yall, resids=TRUE)
+    locFit  <-  fit$table
+    resids  <-  fit$residuals
+    b1      <-  locFit$b1
+    yHat    <-  fit$yHat
 
     #  residual plots
-    dev.new()
-    
-    # standardized residuals ~ x
-    par(mfrow=c(2,2))
-    plot(LocFit$stdResid ~ x, xlab='x', ylab='y', main='Std. Residuals ~ x')
-    abline(h=0, col=1, lwd=2)
-    abline(h=c(-2, 2), lty=2)
-    lf1  <-  loess(LocFit$stdResid ~ x)
-    points(x, lf1$fitted, type='l', col=2, lwd=2)
-    
-    # standardized residuals ~ fitted values
-    plot(LocFit$stdResid ~ LocFit$yHat, xlab='Fitted Values',ylab='Standardized Residuals',main='Std. Residuals ~ Fitted Values')
-    abline(h=0, col=1, lwd=2)
-    abline(h=c(-2, 2), lty=2)
-    lf2  <-  loess(LocFit$stdResid ~ LocFit$yHat)
-    points(LocFit$yHat, lf2$fitted, type='l', col=2, lwd=2)
-    
-    # qqnorm plot of standardized residuals
-    qqnorm(LocFit$stdResid, main='QQNorm plot of Std. Residuals')
-    qqline(LocFit$stdResid, col=2)
-    
-    # histogram of standardized residuals
-    hist(LocFit$stdResid, xlab='Standardized Residuals', ylab='Density', breaks=20, main='Density Plot of Std. Residuals')
+    dev.new(width=9, height=5)
+
+    layout(matrix(c(
+                    rep(c(rep(1, 4), rep(2, 2), rep(3, 2)), 2),
+                    rep(c(rep(1, 4), rep(4, 2), rep(5, 2)), 2)
+                   ), 
+           nrow=4, ncol=8, byrow=TRUE)
+    )
     
     #  overall regression plot
-    dev.new()
-    col1  <-  adjustcolor('#1B6889', alpha=0.5)
-    plot(yall ~ xall, pch=21, col='grey80', ask=TRUE, main=expression(paste('Best Local Regression: ', beta[1],' = ', b1)))
-    points(y ~ x, pch=21, bg=col1, ask=TRUE)
-    abline(coef=c(LocFit$bHat[1], LocFit$bHat[2]), col=1)
+    outy  <-  allRegs$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(allRegs$yall))]
+    outx  <-  allRegs$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(allRegs$yall))]
+
+    par(mai=c(1.2, 0.8, 0.8, 0.4), cex=1)
+    plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
+    points(y ~ x, col='dodgerblue', cex=1.2)
+    lines(x, locFit$b0 + locFit$b1*x, col='black', lwd=2, lty=2)
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+
+    # standardized residuals ~ x
+    par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
+    yRange  <-  max(abs(c(floor(min(resids)), ceiling(max(resids)))))
+    yRange  <-  c(-1*yRange, yRange)
+    plot(resids ~ x, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    points(resids ~ x, pch=16, col=transparentColor('dodgerblue', 0.5))
+    abline(h=0, col=1, lwd=2)
+    abline(h=c(-2, 2), lty=2)
+    lf1  <-  loess(resids ~ x)
+    lines(x, lf1$fitted, col='tomato', lwd=2)
+    
+    # standardized residuals ~ fitted values
+    plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    points(resids ~ yHat, pch=16, col=transparentColor('dodgerblue', 0.5))
+    abline(h=0, col=1, lwd=2)
+    abline(h=c(-2, 2), lty=2)
+    lf2  <-  loess(resids ~ yHat)
+    lines(yHat, lf2$fitted, col='tomato', lwd=2)
+    
+    # qqnorm plot of standardized residuals
+    par(mai=c(0.9732, 0.5412, 0.2412, 0.2772), cex=0.8)
+    qqPlot  <-  qqnorm(resids, main='QQNorm plot of Std. Residuals', xpd=NA, plot=FALSE)
+    plot(y ~ x, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    points(qqPlot$y ~ qqPlot$x, pch=16, col=transparentColor('dodgerblue', 0.5))
+    qqline(resids, col='tomato')
+    
+    # histogram of standardized residuals
+    histPlot  <-  hist(resids, breaks=20, plot=FALSE)
+    plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE)
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    densities  <-  histPlot$density
+    breakPts   <-  histPlot$breaks
+    for(j in seq_along(densities)) {
+        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=transparentColor('dodgerblue', 0.5))
+    }
 }
 
 plotBeta1 <- function(results) {
