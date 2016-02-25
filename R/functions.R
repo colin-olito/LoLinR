@@ -56,6 +56,7 @@ pcRank  <-  function(x) {
 #'
 #' @title Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient)
 #' @param x A numeric vector
+#' @param na.rm Logical. Should NAs be removed?
 #' @details This function is a dependency for \code{findLocLin}
 #' where it is used to calculate the (sample) skewness of standardized residuals.
 #' @return A numeric vector of length 1
@@ -73,6 +74,7 @@ skew  <-  function(x, na.rm=TRUE) {
 #' @title Get all possible windows between specified alpha 
 #' and 1 
 #' @param x A numeric vector
+#' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
 #' @details This function is a dependency for \code{findLocLin}
 #' where it is used to extract all local windows
 #' for local regressions. alpha must be higher than 0 and lower or equal to 1. 
@@ -101,10 +103,10 @@ getWindows  <-  function(x, alpha) {
 #' the auxillary regression.
 
 #' @details NOTE: This function is a (very slightly) modified version 
-#' of \code{bgtest()} from the \code{\link{lmtest}} package (available at 
-#' \link{https://github.com/cran/lmtest/blob/master/R/bgtest.R}).
+#' of \code{bgtest()} from the \code{lmtest} package (available at 
+#' https://github.com/cran/lmtest/blob/master/R/bgtest.R).
 #' We have stripped it down to minimal functionality for our purposes.
-#' All development credit goes to the authors of \code{\link{lmtest}}.
+#' All development credit goes to the authors of \code{lmtest}.
 #'
 #' This function is a dependency for \code{rankLocReg} where it is
 #' used to calculate the Breusch-Godfrey statistic divided by the number 
@@ -212,12 +214,15 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' Wrapper - calls function that creates class rankLocReg
 #'
 #' @title rankLocReg
-#' @param x A numeric vector
-#' @param ... Additional arguments to \code{rankLocReg.default}
+#' @param xall A numeric vector
+#' @param yall A numeric vector
+#' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
+#' @param method Ranking method. See details.
+#' @param verbose Logical. Should progress be printed?
 #' @return Default function \code{rankLocReg.default}
 #' @seealso \code{rankLocReg.default}
 #' @export
-rankLocReg <- function(x, ...) {
+rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     UseMethod('rankLocReg')
 }
 
@@ -231,7 +236,7 @@ rankLocReg <- function(x, ...) {
 #' @param verbose Logical. Should progress be printed?
 #' @details To be completed.
 #' @return A data frame with local regressions ranked by metric L following raking method chosen by argument \code{method}.
-#' @seealso \code{\link{locReg}}
+#' @seealso \code{locReg}
 #' @export
 rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     if(is.unsorted(xall))
@@ -293,20 +298,21 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
 #' Plotting chosen local linear regression
 #'
 #' @title Plotting chosen local linear regression
-#' @param allRegs An object of class \code{rankLocReg}
+#' @param x An object of class \code{rankLocReg}
+#' @param ... Other parameters to be passed through to plotting functions.
 #' @param rank Position, as in row number from input \code{allRegs}, of local regression to be plotted.
 #' @details Generates a scatterplot + residual-plot diagnostics for chosen local regression
 #' @return A 5-plot panel
 #' @seealso \code{rankLocReg.default}
 #' @export
-plot.rankLocReg  <-  function(allRegs, rank=1) {
+plot.rankLocReg  <-  function(x, ..., rank=1) {
     #  recover data window for chosen local regression model
-    bestwin  <-  c(allRegs$allRegs$Lbound[rank], allRegs$allRegs$Rbound[rank])
-    y        <-  allRegs$yall[bestwin[1]:bestwin[2]]
-    x        <-  allRegs$xall[bestwin[1]:bestwin[2]]
+    bestwin  <-  c(x$allRegs$Lbound[rank], x$allRegs$Rbound[rank])
+    y1       <-  x$yall[bestwin[1]:bestwin[2]]
+    x1       <-  x$xall[bestwin[1]:bestwin[2]]
     
     #  fit block
-    fit     <-  locReg(bestwin, allRegs$xall, allRegs$yall, resids=TRUE)
+    fit     <-  locReg(bestwin, x$xall, x$yall, resids=TRUE)
     locFit  <-  fit$table
     resids  <-  fit$residuals
     b1      <-  locFit$b1
@@ -323,11 +329,11 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     )
     
     #  overall regression plot
-    outy  <-  allRegs$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(allRegs$yall))]
-    outx  <-  allRegs$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(allRegs$yall))]
+    outy  <-  x$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
+    outx  <-  x$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
 
     par(mai=c(1.2, 0.8, 0.8, 0.4), cex=1)
-    plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
+    plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
@@ -335,8 +341,8 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
     points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
-    points(y ~ x, col='dodgerblue', cex=1.2)
-    lines(x, locFit$b0 + locFit$b1*x, col='black', lwd=2, lty=2)
+    points(y1 ~ x1, col='dodgerblue', cex=1.2)
+    lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
     proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
 
@@ -344,18 +350,18 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
     yRange  <-  max(abs(c(floor(min(resids)), ceiling(max(resids)))))
     yRange  <-  c(-1*yRange, yRange)
-    plot(resids ~ x, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
+    plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ x, pch=16, col=transparentColor('dodgerblue', 0.5))
+    points(resids ~ x1, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
-    lf1  <-  loess(resids ~ x)
-    lines(x, lf1$fitted, col='tomato', lwd=2)
+    lf1  <-  loess(resids ~ x1)
+    lines(x1, lf1$fitted, col='tomato', lwd=2)
     
     # standardized residuals ~ fitted values
     plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
@@ -374,7 +380,7 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     # qqnorm plot of standardized residuals
     par(mai=c(0.9732, 0.5412, 0.2412, 0.2772), cex=0.8)
     qqPlot  <-  qqnorm(resids, main='QQNorm plot of Std. Residuals', xpd=NA, plot=FALSE)
-    plot(y ~ x, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
+    plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
