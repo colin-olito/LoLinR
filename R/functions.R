@@ -23,6 +23,18 @@ checkNumeric  <-  function(x) {
         stop('x must be numeric') 
 }
 
+##' Wrapper - Checks that lengths of inputs x and y are equal
+##'
+##' @title Check Equal
+##' @param x A numeric vector
+##' @param y A numeric vector
+##' @return logical
+checkEqualLength  <-  function(x, y) {
+    equalLength  <-  length(x) == length(y)
+    if(!equalLength)
+        stop('x and y must be of equal length')
+}
+
 ##' Calculate the percentile values of a vector x
 ##'
 ##' @title Calculate the percentile values of a vector x
@@ -159,6 +171,9 @@ getWindows  <-  function(x, alpha) {
 # bit of code.
 
 locReg  <-  function(wins, xall, yall, resids=FALSE) {
+    # check equal lengths of x and y
+    checkEqualLength(xall, yall)
+
     #  grab data window for local regression
     x  <-  xall[wins[1]:wins[2]]
     y  <-  yall[wins[1]:wins[2]]
