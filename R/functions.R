@@ -1,59 +1,6 @@
-## Main package functions
-
-transparentColor <- function(col, opacity=0.5) {
-    if (length(opacity) > 1 && any(is.na(opacity))) {
-        n <- max(length(col), length(opacity))
-        opacity <- rep(opacity, length.out=n)
-        col <- rep(col, length.out=n)
-        ok <- !is.na(opacity)
-        ret <- rep(NA, length(col))
-        ret[ok] <- Recall(col[ok], opacity[ok])
-        ret
-    } else {
-        tmp <- col2rgb(col)/255
-        rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
-    }
-}
-
-proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
-    usr  <-  par('usr')
-    x.p  <-  usr[1] + px*(usr[2] - usr[1])
-    y.p  <-  usr[3] + py*(usr[4] - usr[3])
-    if(log=='x') {
-        x.p<-10^(x.p)
-    }
-    if(log=='y') {
-        y.p<-10^(y.p)
-    }
-    if(log=='xy') {
-        x.p<-10^(x.p)
-        y.p<-10^(y.p)
-    }
-    if(text){
-        text(x.p, y.p, lab, adj=adj, ...)
-    } else {
-        points(x.p, y.p, ...)
-    }
-}
-
-whiteGrid  <-  function(...) {
-    proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(rep(0.6, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(rep(0.8, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(c(0,1), rep(0.2, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(c(0,1), rep(0.4, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(c(0,1), rep(0.6, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
-    proportionalLabel(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
-}
-
-rounded  <-  function(value, precision=1, change=FALSE) {
-  if(change) {
-    value  <-  value * -1
-  }
-  sprintf(paste0('%.', precision, 'f'), round(value, precision))
-}
-
+########################
+# MAIN PACKAGE FUNCTIONS
+########################
 
 ##' Wrapper - strips NA from input x and y
 ##'
@@ -121,11 +68,26 @@ skew  <-  function(x, na.rm=TRUE) {
     (n/((n - 1) * (n - 2))) * sum(((x - mean(x)) / sd(x))^3)
 }
 
-################################################################
-# Dependency -- breuschGodfrey():
-###############
-
-
+##' Get all possible windows
+##'
+##' @title Get all possible windows between specified alpha 
+##' and 1 
+##' @param x A numeric vector
+##' @details This function is a dependency for \code{findLocLin}
+##' where it is used to extract all local windows
+##' for local regressions. alpha must be higher than 0 and lower or equal to 1. 
+##' @return A matrix of vector positions, with starting value on first column and ending value on second column.
+##' @export
+getWindows  <-  function(x, alpha) {
+    checkNumeric(x)
+    validAlpha  <-  alpha > 0 & alpha <= 1
+    if(!validAlpha)
+        stop('alpha must take a value higher than 0 and lower or equal to 1')
+    lenX        <-  length(x)
+    minWin      <-  floor((alpha * lenX))
+    allWindows  <-  combn(lenX, 2)
+    t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
+}
 
 ##' Breusch-Godfrey Statistic
 ##'
@@ -194,27 +156,6 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     )
 }
 
-##' Get all possible windows
-##'
-##' @title Get all possible windows between specified alpha 
-##' and 1 
-##' @param x A numeric vector
-##' @details This function is a dependency for \code{findLocLin}
-##' where it is used to extract all local windows
-##' for local regressions. alpha must be higher than 0 and lower or equal to 1. 
-##' @return A matrix of vector positions, with starting value on first column and ending value on second column.
-##' @export
-getWindows  <-  function(x, alpha) {
-    checkNumeric(x)
-    validAlpha  <-  alpha > 0 & alpha <= 1
-    if(!validAlpha)
-        stop('alpha must take a value higher than 0 and lower or equal to 1')
-    lenX        <-  length(x)
-    minWin      <-  floor((alpha * lenX))
-    allWindows  <-  combn(lenX, 2)
-    t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
-}
-
 ################################################################
 #  Dependency -- locReg():
 #############
@@ -268,9 +209,10 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
     out
 }
 
-################################################################
-#  THE MAIN WRAPPER FUNCTION -- findLocLin():
-#############
+rankLocReg <- function(x, ...) {
+    UseMethod('rankLocReg')
+}
+
 rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), plots=TRUE, verbose=TRUE) {
     if(is.unsorted(xall))
         warning("Dataset must be ordered by xall")
@@ -321,33 +263,18 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
                  'nFits'    =  nFits,
                  'allRegs'  =  allRegs,
                  'xall'     =  xall,
-                 'yall'     =  yall
+                 'yall'     =  yall,
+                 'call'     =  match.call(),
+                 'method'   =  method
              )
 
     class(out)  <-  'rankLocReg'
     out
 }
 
-rankLocReg <- function(x, ...) {
-    UseMethod('rankLocReg')
-}
-
 ####################
 # PLOTTING FUNCTIONS
 ####################
-outputPlot  <-  function(allRegs, x, y) {
-    col1  <-  adjustcolor('#1B6889', alpha=0.5)
-    par(mfrow=c(5,5))
-    for(i in seq_len(nrow(allRegs))) {
-        # Subset Data #
-        ytemp  <-  y[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
-        xtemp  <-  x[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
-        # Plot #
-        plot(y ~ x, pch=21, col='grey80', main=i)
-        points(ytemp ~ xtemp, pch=21, bg=col1, ask=TRUE)
-        abline(coef=c(allRegs$b0[i],allRegs$b1[i]), col=2)
-    }
-}
 
 ###################################################
 #  plotBest():
@@ -467,6 +394,20 @@ plot.rankLocReg  <-  function(allRegs, rank=1) {
     }
 }
 
+outputPlot  <-  function(allRegs, x, y) {
+    col1  <-  adjustcolor('#1B6889', alpha=0.5)
+    par(mfrow=c(5,5))
+    for(i in seq_len(nrow(allRegs))) {
+        # Subset Data #
+        ytemp  <-  y[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
+        xtemp  <-  x[c(allRegs$Lbound[i]:allRegs$Rbound[i])]
+        # Plot #
+        plot(y ~ x, pch=21, col='grey80', main=i)
+        points(ytemp ~ xtemp, pch=21, bg=col1, ask=TRUE)
+        abline(coef=c(allRegs$b0[i],allRegs$b1[i]), col=2)
+    }
+}
+
 plotBeta1 <- function(results) {
     c1  <-  adjustcolor('#A67A01', alpha=0.75)
     c2  <-  adjustcolor('#6D65FA', alpha=0.75)
@@ -488,4 +429,89 @@ plotBeta1 <- function(results) {
           col     =  c(c1, c2, c3),
           cex     =  1
     )
+}
+
+transparentColor <- function(col, opacity=0.5) {
+    if (length(opacity) > 1 && any(is.na(opacity))) {
+        n <- max(length(col), length(opacity))
+        opacity <- rep(opacity, length.out=n)
+        col <- rep(col, length.out=n)
+        ok <- !is.na(opacity)
+        ret <- rep(NA, length(col))
+        ret[ok] <- Recall(col[ok], opacity[ok])
+        ret
+    } else {
+        tmp <- col2rgb(col)/255
+        rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
+    }
+}
+
+proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
+    usr  <-  par('usr')
+    x.p  <-  usr[1] + px*(usr[2] - usr[1])
+    y.p  <-  usr[3] + py*(usr[4] - usr[3])
+    if(log=='x') {
+        x.p<-10^(x.p)
+    }
+    if(log=='y') {
+        y.p<-10^(y.p)
+    }
+    if(log=='xy') {
+        x.p<-10^(x.p)
+        y.p<-10^(y.p)
+    }
+    if(text){
+        text(x.p, y.p, lab, adj=adj, ...)
+    } else {
+        points(x.p, y.p, ...)
+    }
+}
+
+whiteGrid  <-  function(...) {
+    proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.6, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(rep(0.8, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.2, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.4, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.6, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+    proportionalLabel(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
+}
+
+rounded  <-  function(value, precision=1) {
+  sprintf(paste0('%.', precision, 'f'), round(value, precision))
+}
+
+######################
+# AUXILLIARY FUNCTIONS
+######################
+summary.rankLocReg <- function(object, ...) {
+    out <- list(
+                call          =  object$call,
+                data          =  summary(data.frame(xall=object$xall, yall=object$yall)),
+                summaryTable  =  head(object$allRegs),
+                nFits         =  object$nFits,
+                method        =  object$method
+           )
+
+    class(out) <- 'summary.rankLocReg'
+    out
+}
+
+print.summary.rankLocReg <- function(x, ...) {
+    cat('Call:\n')
+    print(x$call)
+    cat('\n')
+
+    cat('Number of fitted local regressions:\n')
+    print(x$nFits)
+    cat('\n')
+
+    cat('Used dataset:\n')
+    print(x$data)
+    cat('\n')
+
+    cat('Best ', nrow(x$summaryTable), ' local regressions (L-metric ranking) fitted with method ', x$method, '\n')
+    print(x$summaryTable)
+    cat('\n')
 }
