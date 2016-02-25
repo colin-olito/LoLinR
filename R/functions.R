@@ -439,6 +439,8 @@ outputRankLocRegPlot  <-  function(allRegs) {
         proportionalLabel(0.95, 0.9, i, cex=0.7, font=3, adj=c(1, 0.5))
         proportionalLabel(0.03, 0.1, substitute(italic(y) == a~sy~b%.%italic(x), list(a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
     }
+    mtext('Response', side=2, line=2.5, outer=TRUE)
+    mtext('Predictor', side=1, line=2.5, outer=TRUE)
 }
 
 ##' Distribution of all local slopes
