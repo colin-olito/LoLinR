@@ -1,10 +1,8 @@
 Package: LoLinR
 Title: Local Linear Regression for Estimating Biological Rates From Time-Series & Trace Data
 Version: 0.0.0.9000
-Authors@R: c(
-    person("Colin", "Olito", , "colin.olito@monash.edu", c("aut", "cre")),
-    person("Diego", "Barneche", , "diego.barneche@monash.edu", c("aut", "cre"))
-    )
+Author: Colin Olito and Diego R. Barneche
+Maintainer: Colin Olito <colin.olito@monash.edu>
 Description: The package provides necessary functions for estimating monotonic biological rates from often messy and non-linear time-series and trace data.
 Depends: 
 	R (>= 3.2.2)
