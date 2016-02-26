@@ -11,17 +11,17 @@ See the package documentation for `LoLinR` using `library(help=LoLinR)` and exam
 
 ## Installation
 
-The `LoLinR` package can be installed from github using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package. 
-**Using `devtools::install_github`**
+The `LoLinR` package can be installed from github using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package
+using `devtools::install_github`.
 
-If you do not yet have `devtools`, install with `install.packages("devtools")`
+If you do not yet have `devtools`, install with `install.packages("devtools")`.
 
-Then install `LoLinR` using the following:
-`library(devtools)`
-`install_github('colin-olito/LoLinR')`
+Then install `LoLinR` using the following:  
+`library(devtools)`  
+`install_github('colin-olito/LoLinR')`  
 `library(LoLinR)`
 
-`LoLinR` does not currently have any dependencies on other packages
+`LoLinR` does not currently have any dependencies on other packages.
 
 
 
