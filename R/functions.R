@@ -236,6 +236,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
+#' @details If method is unspecified, default to \code{ns}.
 #' @return Default function \code{\link{rankLocReg.default}}.
 #' @seealso \code{\link{rankLocReg.default}}.
 #' @export
@@ -256,7 +257,7 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
-#' @details To be completed.
+#' @details If method is unspecified, default to \code{ns}.
 #' @return A data frame with local regressions ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @seealso \code{\link{locReg}}.
 #' @export
@@ -266,13 +267,21 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' # rank L metric by method 'eq'
 #' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
-    if(is.unsorted(xall))
-        warning("Dataset must be ordered by xall")
-        
+    
+    if(missing(method))
+        method  <-  'ns'
+    
+    # make sure input does not contain characters
+    checkNumeric(c(xall, yall))
+
     # make sure that all NAs are dealt with
     dat   <-  stripNAs(xall, yall)
     xall  <-  dat$x
     yall  <-  dat$y
+
+    # x needs to be sorted
+    if(is.unsorted(xall))
+        warning("Dataset must be ordered by xall")
 
     #  get all possible windows
     wins  <-  getWindows(x=yall, alpha)

@@ -25,7 +25,7 @@ A data frame with local regressions ranked by metric \code{L} following raking m
 Ranking local linear regressions.
 }
 \details{
-To be completed.
+If method is unspecified, default to \code{ns}.
 }
 \examples{
 # load sea urchin respirometry data

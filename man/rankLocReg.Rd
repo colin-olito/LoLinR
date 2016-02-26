@@ -23,6 +23,9 @@ Default function \code{\link{rankLocReg.default}}.
 \description{
 Wrapper - calls function that creates class \code{rankLocReg}.
 }
+\details{
+If method is unspecified, default to \code{ns}.
+}
 \examples{
 # load sea urchin respirometry data
 data(TestO2data)
