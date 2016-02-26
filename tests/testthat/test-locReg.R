@@ -7,12 +7,12 @@ x2       <-  rnorm(50)
 y2       <-  rnorm(50, mean=2, sd=0.3) + rnorm(50, mean=3, sd=0.5) * x2
 xNA      <-  x
 yNA      <-  y
-xNA[sample(c(1:100), 5)] <- NA
-yNA[sample(c(1:100), 5)] <- NA
 charVec  <-  letters[1:100]
 locReg1  <-  locReg(wins=win, xall=x, yall=y, resids=FALSE)
-lm1      <-  lm( y[win[1]:win[2]] ~ x[win[1]:win[2]])
+lm1      <-  lm(y[win[1]:win[2]] ~ x[win[1]:win[2]])
 lst      <-  list(win,x,y)
+xNA[sample(c(1:100), 5)] <- NA
+yNA[sample(c(1:100), 5)] <- NA
 
 test_that("Simple corner cases", {
 

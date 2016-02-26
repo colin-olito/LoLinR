@@ -1,14 +1,16 @@
 context("Breusch-Godfrey Statistic")
 
-    x        <-  rnorm(100)
-    y        <-  rnorm(100, mean=runif(c(-2,2)), sd=0.3) + rnorm(100, mean=runif(c(-3,3)), sd=0.5) * x
-    x2       <-  rnorm(103)
-    y2       <-  rnorm(103, mean=2, sd=0.3) + rnorm(103, mean=3, sd=0.5) * x2
-    xNA      <-  x
-    yNA      <-  y
-    xNA[sample(c(1:100), 5)] <- NA
-    yNA[sample(c(1:100), 5)] <- NA
-    charVec  <-  letters[1:100]
+x        <-  rnorm(100)
+y        <-  rnorm(100, mean=runif(c(-2,2)), sd=0.3) + rnorm(100, mean=runif(c(-3,3)), sd=0.5) * x
+x2       <-  rnorm(103)
+y2       <-  rnorm(103, mean=2, sd=0.3) + rnorm(103, mean=3, sd=0.5) * x2
+xNA      <-  x
+yNA      <-  y
+charVec  <-  letters[1:100]
+
+xNA[sample(c(1:100), 5)] <- NA
+yNA[sample(c(1:100), 5)] <- NA
+
 test_that("Simple corner cases", {
 
     # returns correct structure
