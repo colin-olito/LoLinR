@@ -386,7 +386,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     outx  <-  x$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
 
     par(mai=c(1.2, 0.8, 0.8, 0.4), cex=1)
-    plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
+    plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
@@ -398,6 +398,8 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
     proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
     # standardized residuals ~ x
     par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
@@ -486,7 +488,7 @@ outputRankLocRegPlot  <-  function(allRegs) {
         x     <-  allRegs$xall[locFit$Lbound[i]:locFit$Rbound[i]]
 
         # plot
-        plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2)
+        plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(allRegs$yall), (max(allRegs$yall) + 0.25*(max(allRegs$yall) - min(allRegs$yall)))))
         usr  <-  par('usr')
         rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
         whiteGrid()
@@ -501,8 +503,7 @@ outputRankLocRegPlot  <-  function(allRegs) {
         points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
         points(y ~ x, col='dodgerblue', cex=0.8)
         lines(x, locFit$b0[i] + locFit$b1[i]*x, col='black', lwd=2, lty=2)
-        proportionalLabel(0.95, 0.9, i, cex=0.7, font=3, adj=c(1, 0.5))
-        proportionalLabel(0.03, 0.1, substitute(italic(y) == a~sy~b%.%italic(x), list(a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
+        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
     }
     mtext('Response', side=2, line=2.5, outer=TRUE)
     mtext('Predictor', side=1, line=2.5, outer=TRUE)
