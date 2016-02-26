@@ -159,16 +159,19 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     )
 }
 
-#' To be written.
+#' Local Regression Function.
 #'
-#' @title To be written
+#' @title Perform local regression for specified window
 #' 
-#' @param wins A matrix of vector positions obtained from \code{\link{getWindows}}.
+#' @param wins A matrix of vector positions, where wins[,1] contains left boundary positions,
+#' and wins[,2] contains right boundary positions for the desired local regressions. Default
+#' behaviour is optimized for use with \code{\link{getWindows}} in \code{\link{rankLocReg}},
+#' but can accept user-defined windows. 
 #' @param xall A numeric vector.
 #' @param yall A numeric vector.
 #' @param resids Logical. Are residuals to be returned?
 #' @return A data frame if \code{resids} is \code{FALSE}. A list if \code{resids} is \code{TRUE}.
-#' @seealso \code{\link{getWindows}}.
+#' @seealso \code{\link{getWindows}}, \code{\link{rankLocReg}}.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
