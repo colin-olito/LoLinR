@@ -15,4 +15,7 @@ A numeric vector of percentiles truncated between 0 and 1.
 \description{
 Calculate the percentile values of a vector x.
 }
+\author{
+Colin Olito.
+}
 

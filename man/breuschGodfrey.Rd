@@ -44,4 +44,7 @@ by running \code{\link[stats]{qchisq}} with the output \code{bgN} and \code{df}.
 However, we would recommend using the function \code{\link[lmtest]{bgtest}} from the
 package \pkg{lmtest}, as it is specifically designed for this purpose.
 }
+\author{
+Colin Olito.
+}
 

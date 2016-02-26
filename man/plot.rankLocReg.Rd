@@ -27,6 +27,9 @@ allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, meth
 # plot best local regression
 plot(allRegs, rank=1)
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 \seealso{
 \code{\link{rankLocReg.default}}.
 }

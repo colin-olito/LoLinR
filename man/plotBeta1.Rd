@@ -22,6 +22,9 @@ data(TestO2data)
 allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 plotBeta1(allRegs)
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 \seealso{
 \code{\link{rankLocReg.default}}
 }

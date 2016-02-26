@@ -2,12 +2,15 @@
 % Please edit documentation in R/functions.R
 \name{locReg}
 \alias{locReg}
-\title{To be written}
+\title{Perform local regression for specified window}
 \usage{
 locReg(wins, xall, yall, resids = FALSE)
 }
 \arguments{
-\item{wins}{A matrix of vector positions obtained from \code{\link{getWindows}}.}
+\item{wins}{A matrix of vector positions, where wins[,1] contains left boundary positions,
+and wins[,2] contains right boundary positions for the desired local regressions. Default
+behaviour is optimized for use with \code{\link{getWindows}} in \code{\link{rankLocReg}},
+but can accept user-defined windows.}
 
 \item{xall}{A numeric vector.}
 
@@ -19,7 +22,7 @@ locReg(wins, xall, yall, resids = FALSE)
 A data frame if \code{resids} is \code{FALSE}. A list if \code{resids} is \code{TRUE}.
 }
 \description{
-To be written.
+Local Regression Function.
 }
 \examples{
 # load sea urchin respirometry data
@@ -28,7 +31,10 @@ data(TestO2data)
 wins  <-  getWindows(x=TestO2data$D, alpha=0.3)
 reg   <-  locReg(wins[1, ], xall=TestO2data$time, yall=TestO2data$D, resids=TRUE)
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 \seealso{
-\code{\link{getWindows}}.
+\code{\link{getWindows}}, \code{\link{rankLocReg}}.
 }
 

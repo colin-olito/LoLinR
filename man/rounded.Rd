@@ -17,4 +17,7 @@ A character vector.
 \description{
 Internal. Create nice rounded numbers for plotting.
 }
+\author{
+Diego Barneche.
+}
 

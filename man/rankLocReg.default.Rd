@@ -33,6 +33,9 @@ data(TestO2data)
 # rank L metric by method 'eq'
 allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 \seealso{
 \code{\link{locReg}}.
 }

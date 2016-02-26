@@ -23,4 +23,7 @@ This function is a dependency for \code{\link{rankLocReg}}
 where it is used to extract all local windows
 for local regressions. \code{alpha} must be higher than 0 and lower or equal to 1.
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 

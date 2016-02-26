@@ -8,6 +8,7 @@
 #' @param x A numeric vector.
 #' @param y A numeric vector.
 #' @return A data frame with complete cases.
+#' @author Diego Barneche.
 stripNAs  <-  function(x, y) {
     dat  <-  data.frame(x, y)
     dat[complete.cases(dat), ]
@@ -19,6 +20,7 @@ stripNAs  <-  function(x, y) {
 #' @param x A numeric vector.
 #' @return Breaks function and returns error message if x
 #' is non-numeric.
+#' @author Diego Barneche.
 checkNumeric  <-  function(x) {
     xNumeric  <-  is.numeric(x)
     if(!xNumeric)
@@ -31,6 +33,7 @@ checkNumeric  <-  function(x) {
 #' @param x A numeric vector.
 #' @param y A numeric vector.
 #' @return Logical.
+#' @author Colin Olito and Diego Barneche.
 checkEqualLength  <-  function(x, y) {
     equalLength  <-  length(x) == length(y)
     if(!equalLength)
@@ -42,6 +45,7 @@ checkEqualLength  <-  function(x, y) {
 #' @title Calculate the percentile values of x
 #' @param x A numeric vector.
 #' @return A numeric vector of percentiles truncated between 0 and 1.
+#' @author Colin Olito.
 #' @export
 pcRank  <-  function(x) {
     checkNumeric(x)
@@ -60,6 +64,7 @@ pcRank  <-  function(x) {
 #' @details This function is a dependency for \code{\link{rankLocReg}}
 #' where it is used to calculate the (sample) skewness of standardized residuals.
 #' @return A numeric vector of length 1.
+#' @author Colin Olito.
 #' @export
 skew  <-  function(x, na.rm=TRUE) {
     checkNumeric(x)
@@ -80,6 +85,7 @@ skew  <-  function(x, na.rm=TRUE) {
 #' where it is used to extract all local windows
 #' for local regressions. \code{alpha} must be higher than 0 and lower or equal to 1. 
 #' @return A matrix of vector positions, with starting value on first column and ending value on second column.
+#' @author Colin Olito and Diego Barneche.
 #' @export
 getWindows  <-  function(x, alpha) {
     checkNumeric(x)
@@ -120,6 +126,7 @@ getWindows  <-  function(x, alpha) {
 #' by running \code{\link[stats]{qchisq}} with the output \code{bgN} and \code{df}.
 #' However, we would recommend using the function \code{\link[lmtest]{bgtest}} from the
 #' package \pkg{lmtest}, as it is specifically designed for this purpose.
+#' @author Colin Olito.
 #' @import lmtest
 #' @return A list with: the standard BG statistic (\code{bg}), BG/n (\code{bgN}), and d.f. (\code{df}).
 #' @export
@@ -172,6 +179,7 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
 #' @param resids Logical. Are residuals to be returned?
 #' @return A data frame if \code{resids} is \code{FALSE}. A list if \code{resids} is \code{TRUE}.
 #' @seealso \code{\link{getWindows}}, \code{\link{rankLocReg}}.
+#' @author Colin Olito and Diego Barneche.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -238,6 +246,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' @param verbose Logical. Should progress be printed?
 #' @details If method is unspecified, default to \code{ns}.
 #' @return Default function \code{\link{rankLocReg.default}}.
+#' @author Colin Olito and Diego Barneche.
 #' @seealso \code{\link{rankLocReg.default}}.
 #' @export
 #' @examples
@@ -259,6 +268,7 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' @param verbose Logical. Should progress be printed?
 #' @details If method is unspecified, default to \code{ns}.
 #' @return A data frame with local regressions ranked by metric \code{L} following raking method chosen by argument \code{method}.
+#' @author Colin Olito and Diego Barneche.
 #' @seealso \code{\link{locReg}}.
 #' @export
 #' @examples
@@ -340,6 +350,7 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
 #' @return Generates a scatterplot + residual-plot diagnostics for chosen local regression.
 #' @seealso \code{\link{rankLocReg.default}}.
 #' @export
+#' @author Colin Olito and Diego Barneche.
 #' @examples
 #' # load sea urchin respirometry data
 #' data(TestO2data)
@@ -453,6 +464,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
 #' @title Plotting 25 best local linear regressions
 #' @param allRegs An object of class \code{rankLocReg}.
 #' @return Generates scatterplots for 25 best local regressions.
+#' @author Colin Olito and Diego Barneche.
 #' @seealso \code{rankLocReg.default}
 #' @export
 #' @examples
@@ -502,6 +514,7 @@ outputRankLocRegPlot  <-  function(allRegs) {
 #' @param allRegs An object of class \code{rankLocReg}.
 #' @details Generates a distribution of all local regression slopes.
 #' @seealso \code{\link{rankLocReg.default}}
+#' @author Colin Olito and Diego Barneche.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -603,6 +616,7 @@ proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ..
 #'
 #' @title Equally-spaced white lines on plot window
 #' @param ... Additional arguments to internal function \code{\link{proportionalLabel}}.
+#' @author Diego Barneche
 whiteGrid  <-  function(...) {
     proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
     proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
@@ -620,6 +634,7 @@ whiteGrid  <-  function(...) {
 #' @param value A numeric vector.
 #' @param precision Number of rounding digits.
 #' @return A character vector.
+#' @author Diego Barneche.
 rounded  <-  function(value, precision=1) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }
@@ -635,6 +650,7 @@ rounded  <-  function(value, precision=1) {
 #' @param ... Additional arguments affecting the summary produced.
 #' @return A summary list with main features calculated by function \code{\link{rankLocReg}}.
 #' @seealso \code{\link{rankLocReg}}.
+#' @author Diego Barneche.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -662,6 +678,7 @@ summary.rankLocReg <- function(object, ...) {
 #' @param ... Further arguments passed to or from other methods.
 #' @return A summary list with main features calculated by function \code{\link{rankLocReg}}.
 #' @seealso \code{\link{rankLocReg}}, \code{\link{summary.rankLocReg}}
+#' @author Diego Barneche.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data

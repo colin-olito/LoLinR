@@ -17,4 +17,7 @@ Logical.
 \description{
 Wrapper - Checks that lengths of inputs x and y are equal.
 }
+\author{
+Colin Olito and Diego Barneche.
+}
 

@@ -16,4 +16,7 @@ is non-numeric.
 \description{
 Wrapper for \code{is.\link[base]{numeric}}.
 }
+\author{
+Diego Barneche.
+}
 

@@ -12,4 +12,7 @@ whiteGrid(...)
 \description{
 Draw equally-spaced white lines on plot window.
 }
+\author{
+Diego Barneche
+}
 

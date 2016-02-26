@@ -17,4 +17,7 @@ A data frame with complete cases.
 \description{
 Wrapper - strips NA from input x and y.
 }
+\author{
+Diego Barneche.
+}
 

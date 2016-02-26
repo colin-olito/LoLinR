@@ -21,4 +21,7 @@ Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient).
 This function is a dependency for \code{\link{rankLocReg}}
 where it is used to calculate the (sample) skewness of standardized residuals.
 }
+\author{
+Colin Olito.
+}
 
