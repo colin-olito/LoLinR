@@ -10,7 +10,10 @@ Depends:
 	R (>= 3.2.2)
 License: GPL-2
 LazyData: true
-Imports:
+Imports: 
 	lmtest
 Suggests: 
-	testthat
+	testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
