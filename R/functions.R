@@ -177,6 +177,11 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
 #' wins  <-  getWindows(x=TestO2data$D, alpha=0.3)
 #' reg   <-  locReg(wins[1, ], xall=TestO2data$time, yall=TestO2data$D, resids=TRUE)
 locReg  <-  function(wins, xall, yall, resids=FALSE) {
+    # check that window is ok
+    badwin  <-  wins[1] >= wins[2]
+    if(badwin)
+        stop('Left window boundary greater than or equal to Right boundary')
+
     # check equal lengths of x and y
     checkEqualLength(xall, yall)
 
