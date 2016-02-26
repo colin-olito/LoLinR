@@ -7,14 +7,14 @@
 stripNAs(x, y)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 
-\item{y}{A numeric vector}
+\item{y}{A numeric vector.}
 }
 \value{
-a data.frame with complete.cases
+A data frame with complete cases.
 }
 \description{
-Wrapper - strips NA from input x and y
+Wrapper - strips NA from input x and y.
 }
 

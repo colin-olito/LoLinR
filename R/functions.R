@@ -2,46 +2,46 @@
 # MAIN PACKAGE FUNCTIONS
 ########################
 
-#' Wrapper - strips NA from input x and y
+#' Wrapper - strips NA from input x and y.
 #'
 #' @title Remove NA
-#' @param x A numeric vector
-#' @param y A numeric vector
-#' @return a data.frame with complete.cases
+#' @param x A numeric vector.
+#' @param y A numeric vector.
+#' @return A data frame with complete cases.
 stripNAs  <-  function(x, y) {
     dat  <-  data.frame(x, y)
     dat[complete.cases(dat), ]
 }
 
-#' Wrapper - check if vector is numeric
+#' Wrapper for \code{is.\link[base]{numeric}}.
 #'
-#' @title Wrapper for \code{is.numeric}
-#' @param x A numeric vector
-#' @return Breaks function and returns error message if x 
-#' is non-numeric
+#' @title Check if vector is numeric
+#' @param x A numeric vector.
+#' @return Breaks function and returns error message if x
+#' is non-numeric.
 checkNumeric  <-  function(x) {
     xNumeric  <-  is.numeric(x)
     if(!xNumeric)
         stop('x must be numeric') 
 }
 
-#' Wrapper - Checks that lengths of inputs x and y are equal
+#' Wrapper - Checks that lengths of inputs x and y are equal.
 #'
-#' @title Check Equal
-#' @param x A numeric vector
-#' @param y A numeric vector
-#' @return logical
+#' @title Check for equal lengths
+#' @param x A numeric vector.
+#' @param y A numeric vector.
+#' @return Logical.
 checkEqualLength  <-  function(x, y) {
     equalLength  <-  length(x) == length(y)
     if(!equalLength)
         stop('x and y must be of equal length')
 }
 
-#' Calculate the percentile values of a vector x
+#' Calculate the percentile values of a vector x.
 #'
-#' @title Calculate the percentile values of a vector x
-#' @param x A numeric vector
-#' @return A numeric vector of percentiles truncated between 0 and 1
+#' @title Calculate the percentile values of x
+#' @param x A numeric vector.
+#' @return A numeric vector of percentiles truncated between 0 and 1.
 #' @export
 pcRank  <-  function(x) {
     checkNumeric(x)
@@ -52,14 +52,14 @@ pcRank  <-  function(x) {
     percentiles
 }
 
-#' Sample skewness
+#' Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient).
 #'
-#' @title Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient)
-#' @param x A numeric vector
+#' @title Sample skewness
+#' @param x A numeric vector.
 #' @param na.rm Logical. Should NAs be removed?
-#' @details This function is a dependency for \code{findLocLin}
+#' @details This function is a dependency for \code{\link{rankLocReg}}
 #' where it is used to calculate the (sample) skewness of standardized residuals.
-#' @return A numeric vector of length 1
+#' @return A numeric vector of length 1.
 #' @export
 skew  <-  function(x, na.rm=TRUE) {
     checkNumeric(x)
@@ -69,15 +69,16 @@ skew  <-  function(x, na.rm=TRUE) {
     (n/((n - 1) * (n - 2))) * sum(((x - mean(x)) / sd(x))^3)
 }
 
-#' Get all possible windows
-#'
-#' @title Get all possible windows between specified alpha 
-#' and 1 
-#' @param x A numeric vector
+#' Get all possible windows between specified alpha.
+#' and 1
+#' 
+#' @title Get all possible windows
+#' 
+#' @param x A numeric vector.
 #' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
-#' @details This function is a dependency for \code{findLocLin}
+#' @details This function is a dependency for \code{\link{rankLocReg}}
 #' where it is used to extract all local windows
-#' for local regressions. alpha must be higher than 0 and lower or equal to 1. 
+#' for local regressions. \code{alpha} must be higher than 0 and lower or equal to 1. 
 #' @return A matrix of vector positions, with starting value on first column and ending value on second column.
 #' @export
 getWindows  <-  function(x, alpha) {
@@ -91,37 +92,36 @@ getWindows  <-  function(x, alpha) {
     t(allWindows[, allWindows[2,] - allWindows[1,] >= minWin ])
 }
 
-#' Breusch-Godfrey Statistic
+#' Modified Breusch-Godfrey Statistic \eqn{\frac{n * R^2}{n}}.
 #'
-#' @title Modified Breusch-Godfrey Statistic ((n*R^2)/n)
-#' @param x A numeric vector
-#' @param y A numeric vector
+#' @title Breusch-Godfrey Statistic
+#' @param x A numeric vector.
+#' @param y A numeric vector.
 #' @param order Order to which residuals are lagged. Defaults to \code{order <- (n - k - 1)},
 #' where \code{n} is the number of observations, and \code{k} is the number of parameters
 #' in the regression (2 by default). This represents the highest possible order given \code{n}.
-#' @param fill Defaults to \code{fill = 0}, used to fill model matrix for lagged residuas in 
-#' the auxillary regression.
-
+#' @param fill Defaults to \code{fill = 0}, used to fill model matrix for lagged residuals in 
+#' the auxiliary regression.
 #' @details NOTE: This function is a (very slightly) modified version 
-#' of \code{bgtest()} from the \code{lmtest} package (available at 
-#' https://github.com/cran/lmtest/blob/master/R/bgtest.R).
+#' of \code{\link[lmtest]{bgtest}} from the \pkg{lmtest} package (available at
+#' \url{https://github.com/cran/lmtest/blob/master/R/bgtest.R}).
 #' We have stripped it down to minimal functionality for our purposes.
-#' All development credit goes to the authors of \code{lmtest}.
+#' All development credit goes to the authors of \pkg{lmtest}.
 #'
-#' This function is a dependency for \code{rankLocReg} where it is
-#' used to calculate the Breusch-Godfrey statistic divided by the number 
-#' of ovservations ((n*R^2)/n). For the purposes of \code{rankLocReg}, 
+#' This function is a dependency for \code{\link{rankLocReg}} where it is
+#' used to calculate \code{bgN} (Breusch-Godfrey Statistic) divided by the number 
+#' of observations \eqn{\frac{n * R^2}{n}}. For the purposes of \code{\link{rankLocReg}}, 
 #' only the relative variance explained by the fitted values from the
-#' auxillary regression and the residuals of the original regression is of
-#' interest. Calculating ((n*R^2)/n) preserves this information, while 
+#' auxiliary regression and the residuals of the original regression is of
+#' interest. Calculating \eqn{\frac{n * R^2}{n}} preserves this information, while 
 #' avoiding the introduction of strong covariance between bgN and n; an 
 #' undesirable behaviour for the linearity metric L. If desired, users can 
 #' reproduce a standard Breusch-Godfrey Chi-squared test of significance 
-#' by using running \code{qchisq()} with the output \code{bgN} and \code{df}.
-#' However, we would recommend using the function \code{bgtest()} from the
-#' package \code{lmtest}, as it is specifically designed for this purpose.
+#' by running \code{\link[stats]{qchisq}} with the output \code{bgN} and \code{df}.
+#' However, we would recommend using the function \code{\link[lmtest]{bgtest}} from the
+#' package \pkg{lmtest}, as it is specifically designed for this purpose.
 #' @import lmtest
-#' @return A list with: the standard BG statistic (bg), BG/n (bgN), and d.f. (df)
+#' @return A list with: the standard BG statistic (\code{bg}), BG/n (\code{bgN}), and d.f. (\code{df}).
 #' @export
 breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     X  <-  matrix(cbind(1, x), ncol=2)
@@ -159,15 +159,23 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
     )
 }
 
-################################################################
-#  Dependency -- locReg():
-#############
-# locReg() is a wrapper for a function to fit a simple linear regression using either
-# weighted or unweighted least squares. The function uses matrix notation to minimize
-# memory usage relative to fitting any of the Base linear model functions in R. This
-# function will consist of the 'guts' of the Fit Block... I imagine that much of the
-# flexibility in the findLocLin() function will come from minor modifications to this
-# bit of code.
+#' To be written.
+#'
+#' @title To be written
+#' 
+#' @param wins A matrix of vector positions obtained from \code{\link{getWindows}}.
+#' @param xall A numeric vector.
+#' @param yall A numeric vector.
+#' @param resids Logical. Are residuals to be returned?
+#' @return A data frame if \code{resids} is \code{FALSE}. A list if \code{resids} is \code{TRUE}.
+#' @seealso \code{\link{getWindows}}.
+#' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' wins  <-  getWindows(x=TestO2data$D, alpha=0.3)
+#' reg   <-  locReg(wins[1, ], xall=TestO2data$time, yall=TestO2data$D, resids=TRUE)
 locReg  <-  function(wins, xall, yall, resids=FALSE) {
     # check equal lengths of x and y
     checkEqualLength(xall, yall)
@@ -212,33 +220,43 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
     out
 }
 
-#' Wrapper - calls function that creates class rankLocReg
+#' Wrapper - calls function that creates class \code{rankLocReg}.
 #'
-#' @title rankLocReg
-#' @param xall A numeric vector
-#' @param yall A numeric vector
+#' @title Ranking local linear regressions
+#' @param xall A numeric vector.
+#' @param yall A numeric vector.
 #' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
-#' @return Default function \code{rankLocReg.default}
-#' @seealso \code{rankLocReg.default}
+#' @return Default function \code{\link{rankLocReg.default}}.
+#' @seealso \code{\link{rankLocReg.default}}.
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     UseMethod('rankLocReg')
 }
 
-#' Ranking local linear regressions
+#' Ranking local linear regressions.
 #'
 #' @title Ranking local linear regressions
-#' @param xall A numeric vector
-#' @param yall A numeric vector
+#' @param xall A numeric vector.
+#' @param yall A numeric vector.
 #' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
 #' @details To be completed.
-#' @return A data frame with local regressions ranked by metric L following raking method chosen by argument \code{method}.
-#' @seealso \code{locReg}
+#' @return A data frame with local regressions ranked by metric \code{L} following raking method chosen by argument \code{method}.
+#' @seealso \code{\link{locReg}}.
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     if(is.unsorted(xall))
         warning("Dataset must be ordered by xall")
@@ -296,16 +314,22 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
 # PLOTTING FUNCTIONS
 ####################
 
-#' Plotting chosen local linear regression
+#' Plotting chosen local linear regression.
 #'
 #' @title Plotting chosen local linear regression
-#' @param x An object of class \code{rankLocReg}
+#' @param x An object of class \code{rankLocReg}.
 #' @param ... Other parameters to be passed through to plotting functions.
-#' @param rank Position, as in row number from input \code{allRegs}, of local regression to be plotted.
-#' @details Generates a scatterplot + residual-plot diagnostics for chosen local regression
-#' @return A 5-plot panel
-#' @seealso \code{rankLocReg.default}
+#' @param rank Position, as in row number from input \code{x}, of local regression to be plotted.
+#' @return Generates a scatterplot + residual-plot diagnostics for chosen local regression.
+#' @seealso \code{\link{rankLocReg.default}}.
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' # plot best local regression
+#' plot(allRegs, rank=1)
 plot.rankLocReg  <-  function(x, ..., rank=1) {
     #  recover data window for chosen local regression model
     bestwin  <-  c(x$allRegs$Lbound[rank], x$allRegs$Rbound[rank])
@@ -407,14 +431,19 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     }
 }
 
-#' Plotting 25 best local linear regressions
+#' Plotting 25 best local linear regressions.
 #'
 #' @title Plotting 25 best local linear regressions
-#' @param allRegs An object of class \code{rankLocReg}
-#' @details Generates scatterplots for 25 best local regressions
-#' @return A 25-plot panel
+#' @param allRegs An object of class \code{rankLocReg}.
+#' @return Generates scatterplots for 25 best local regressions.
 #' @seealso \code{rankLocReg.default}
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' outputRankLocRegPlot(allRegs)
 outputRankLocRegPlot  <-  function(allRegs) {
     dev.new(width=7, height=7)
     par(mfrow=c(5,5), omi=rep(1, 4), mai=rep(0,4), cex=1)
@@ -450,13 +479,19 @@ outputRankLocRegPlot  <-  function(allRegs) {
     mtext('Predictor', side=1, line=2.5, outer=TRUE)
 }
 
-#' Distribution of all local slopes
+#' Distribution of all local slopes.
 #'
 #' @title Distribution of all local slopes
-#' @param allRegs An object of class \code{rankLocReg}
-#' @details Generates a distribution of all local regression slopes
-#' @seealso \code{rankLocReg.default}
+#' @param allRegs An object of class \code{rankLocReg}.
+#' @details Generates a distribution of all local regression slopes.
+#' @seealso \code{\link{rankLocReg.default}}
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' plotBeta1(allRegs)
 plotBeta1 <- function(allRegs) {
 
     c1  <-  'tomato'
@@ -497,8 +532,8 @@ plotBeta1 <- function(allRegs) {
 #' Creates transparent colours
 #'
 #' @title Creates transparent colours
-#' @param col Colour
-#' @param opacity Relative y-axis position (in proportion) where character is to be plotted
+#' @param col Colour.
+#' @param opacity Relative y-axis position (in proportion) where character is to be plotted.
 #' @author Richard G. FitzJohn.
 transparentColor <- function(col, opacity=0.5) {
     if (length(opacity) > 1 && any(is.na(opacity))) {
@@ -515,16 +550,16 @@ transparentColor <- function(col, opacity=0.5) {
     }
 }
 
-#' Plot text or points according to relative axis position
+#' Plot text or points according to relative axis position.
 #'
 #' @title Plot text or points according to relative axis position
-#' @param px Relative x-axis position (in proportion) where character is to be plotted
-#' @param py Relative y-axis position (in proportion) where character is to be plotted
-#' @param lab Plotted text. Works if argument \code{text} is TRUE.
-#' @param adj See argument of same name in R base function \code{par}
+#' @param px Relative x-axis position (in proportion) where character is to be plotted.
+#' @param py Relative y-axis position (in proportion) where character is to be plotted.
+#' @param lab Plotted text. Works if argument \code{\link[graphics]{text}} is \code{TRUE}.
+#' @param adj See argument of same name in R base function \code{\link[graphics]{par}}.
 #' @param text Logical. Should text or points be plotted?
-#' @param log Used if the original plot uses the argument log, e.g. log='x', log='y' or log='xy'
-#' @param ... Additional arguments to R base function \code{text}
+#' @param log Used if the original plot uses the argument log, e.g. \code{log='x'}, \code{log='y'} or \code{log='xy'}.
+#' @param ... Additional arguments to R base function \code{\link[graphics]{text}}.
 #' @author Adapted by Diego Barneche from original version by Richard G. FitzJohn.
 proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
     usr  <-  par('usr')
@@ -547,10 +582,10 @@ proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ..
     }
 }
 
-#' Draw equally-spaced white lines on plot window
+#' Draw equally-spaced white lines on plot window.
 #'
 #' @title Equally-spaced white lines on plot window
-#' @param ... Additional arguments to internal function \code{proportionalLabel}
+#' @param ... Additional arguments to internal function \code{\link{proportionalLabel}}.
 whiteGrid  <-  function(...) {
     proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
     proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
@@ -562,12 +597,12 @@ whiteGrid  <-  function(...) {
     proportionalLabel(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5, ...)
 }
 
-#' Create nice rounded numbers for plotting
+#' Internal. Create nice rounded numbers for plotting.
 #'
 #' @title Rounded numbers for plotting
-#' @param value A numeric vector
-#' @param precision number of rounding digits
-#' @return A character vector
+#' @param value A numeric vector.
+#' @param precision Number of rounding digits.
+#' @return A character vector.
 rounded  <-  function(value, precision=1) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }
@@ -576,14 +611,20 @@ rounded  <-  function(value, precision=1) {
 # AUXILLIARY FUNCTIONS
 ######################
 
-#' Summary for object of class \code{rankLocReg}
+#' Summary for object of class \code{rankLocReg}.
 #'
 #' @title Summary for object of class \code{rankLocReg}
-#' @param object An object of class \code{rankLocReg}
-#' @param ... additional arguments affecting the summary produced.
-#' @return A summary list with main features calculated by function \code{rankLocReg}
-#' @seealso \code{rankLocReg}
+#' @param object An object of class \code{rankLocReg}.
+#' @param ... Additional arguments affecting the summary produced.
+#' @return A summary list with main features calculated by function \code{\link{rankLocReg}}.
+#' @seealso \code{\link{rankLocReg}}.
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' summary(allRegs)
 summary.rankLocReg <- function(object, ...) {
     out <- list(
                 call          =  object$call,
@@ -597,14 +638,20 @@ summary.rankLocReg <- function(object, ...) {
     out
 }
 
-#' Wrapper summary for object of class \code{rankLocReg}
+#' Wrapper summary for object of class \code{rankLocReg}.
 #'
 #' @title Wrapper summary for object of class \code{rankLocReg}
-#' @param x An object of class \code{rankLocReg}
-#' @param ... further arguments passed to or from other methods.
-#' @return A summary list with main features calculated by function \code{rankLocReg}
-#' @seealso \code{rankLocReg}, \code{summary.rankLocReg}
+#' @param x An object of class \code{rankLocReg}.
+#' @param ... Further arguments passed to or from other methods.
+#' @return A summary list with main features calculated by function \code{\link{rankLocReg}}.
+#' @seealso \code{\link{rankLocReg}}, \code{\link{summary.rankLocReg}}
 #' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' # rank L metric by method 'eq'
+#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' summary(allRegs)
 print.summary.rankLocReg <- function(x, ...) {
     cat('Call:\n')
     print(x$call)

@@ -7,17 +7,24 @@
 \method{print}{summary.rankLocReg}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{rankLocReg}}
+\item{x}{An object of class \code{rankLocReg}.}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{Further arguments passed to or from other methods.}
 }
 \value{
-A summary list with main features calculated by function \code{rankLocReg}
+A summary list with main features calculated by function \code{\link{rankLocReg}}.
 }
 \description{
-Wrapper summary for object of class \code{rankLocReg}
+Wrapper summary for object of class \code{rankLocReg}.
+}
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+summary(allRegs)
 }
 \seealso{
-\code{rankLocReg}, \code{summary.rankLocReg}
+\code{\link{rankLocReg}}, \code{\link{summary.rankLocReg}}
 }
 

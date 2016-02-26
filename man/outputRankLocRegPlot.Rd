@@ -7,16 +7,20 @@
 outputRankLocRegPlot(allRegs)
 }
 \arguments{
-\item{allRegs}{An object of class \code{rankLocReg}}
+\item{allRegs}{An object of class \code{rankLocReg}.}
 }
 \value{
-A 25-plot panel
+Generates scatterplots for 25 best local regressions.
 }
 \description{
-Plotting 25 best local linear regressions
+Plotting 25 best local linear regressions.
 }
-\details{
-Generates scatterplots for 25 best local regressions
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+outputRankLocRegPlot(allRegs)
 }
 \seealso{
 \code{rankLocReg.default}

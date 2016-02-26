@@ -2,46 +2,46 @@
 % Please edit documentation in R/functions.R
 \name{breuschGodfrey}
 \alias{breuschGodfrey}
-\title{Modified Breusch-Godfrey Statistic ((n*R^2)/n)}
+\title{Breusch-Godfrey Statistic}
 \usage{
 breuschGodfrey(y, x, order = FALSE, fill = 0)
 }
 \arguments{
-\item{y}{A numeric vector}
+\item{y}{A numeric vector.}
 
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 
 \item{order}{Order to which residuals are lagged. Defaults to \code{order <- (n - k - 1)},
 where \code{n} is the number of observations, and \code{k} is the number of parameters
 in the regression (2 by default). This represents the highest possible order given \code{n}.}
 
-\item{fill}{Defaults to \code{fill = 0}, used to fill model matrix for lagged residuas in
-the auxillary regression.}
+\item{fill}{Defaults to \code{fill = 0}, used to fill model matrix for lagged residuals in
+the auxiliary regression.}
 }
 \value{
-A list with: the standard BG statistic (bg), BG/n (bgN), and d.f. (df)
+A list with: the standard BG statistic (\code{bg}), BG/n (\code{bgN}), and d.f. (\code{df}).
 }
 \description{
-Breusch-Godfrey Statistic
+Modified Breusch-Godfrey Statistic \eqn{\frac{n * R^2}{n}}.
 }
 \details{
 NOTE: This function is a (very slightly) modified version
-of \code{bgtest()} from the \code{lmtest} package (available at
-https://github.com/cran/lmtest/blob/master/R/bgtest.R).
+of \code{\link[lmtest]{bgtest}} from the \pkg{lmtest} package (available at
+\url{https://github.com/cran/lmtest/blob/master/R/bgtest.R}).
 We have stripped it down to minimal functionality for our purposes.
-All development credit goes to the authors of \code{lmtest}.
+All development credit goes to the authors of \pkg{lmtest}.
 
-This function is a dependency for \code{rankLocReg} where it is
-used to calculate the Breusch-Godfrey statistic divided by the number
-of ovservations ((n*R^2)/n). For the purposes of \code{rankLocReg},
+This function is a dependency for \code{\link{rankLocReg}} where it is
+used to calculate \code{bgN} (Breusch-Godfrey Statistic) divided by the number
+of observations \eqn{\frac{n * R^2}{n}}. For the purposes of \code{\link{rankLocReg}},
 only the relative variance explained by the fitted values from the
-auxillary regression and the residuals of the original regression is of
-interest. Calculating ((n*R^2)/n) preserves this information, while
+auxiliary regression and the residuals of the original regression is of
+interest. Calculating \eqn{\frac{n * R^2}{n}} preserves this information, while
 avoiding the introduction of strong covariance between bgN and n; an
 undesirable behaviour for the linearity metric L. If desired, users can
 reproduce a standard Breusch-Godfrey Chi-squared test of significance
-by using running \code{qchisq()} with the output \code{bgN} and \code{df}.
-However, we would recommend using the function \code{bgtest()} from the
-package \code{lmtest}, as it is specifically designed for this purpose.
+by running \code{\link[stats]{qchisq}} with the output \code{bgN} and \code{df}.
+However, we would recommend using the function \code{\link[lmtest]{bgtest}} from the
+package \pkg{lmtest}, as it is specifically designed for this purpose.
 }
 

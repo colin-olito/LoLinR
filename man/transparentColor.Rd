@@ -7,9 +7,9 @@
 transparentColor(col, opacity = 0.5)
 }
 \arguments{
-\item{col}{Colour}
+\item{col}{Colour.}
 
-\item{opacity}{Relative y-axis position (in proportion) where character is to be plotted}
+\item{opacity}{Relative y-axis position (in proportion) where character is to be plotted.}
 }
 \description{
 Creates transparent colours

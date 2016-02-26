@@ -2,14 +2,14 @@
 % Please edit documentation in R/functions.R
 \name{rankLocReg}
 \alias{rankLocReg}
-\title{rankLocReg}
+\title{Ranking local linear regressions}
 \usage{
 rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 }
 \arguments{
-\item{xall}{A numeric vector}
+\item{xall}{A numeric vector.}
 
-\item{yall}{A numeric vector}
+\item{yall}{A numeric vector.}
 
 \item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
 
@@ -18,12 +18,18 @@ rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 \item{verbose}{Logical. Should progress be printed?}
 }
 \value{
-Default function \code{rankLocReg.default}
+Default function \code{\link{rankLocReg.default}}.
 }
 \description{
-Wrapper - calls function that creates class rankLocReg
+Wrapper - calls function that creates class \code{rankLocReg}.
+}
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
 }
 \seealso{
-\code{rankLocReg.default}
+\code{\link{rankLocReg.default}}.
 }
 

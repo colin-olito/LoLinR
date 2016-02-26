@@ -2,18 +2,18 @@
 % Please edit documentation in R/functions.R
 \name{checkNumeric}
 \alias{checkNumeric}
-\title{Wrapper for \code{is.numeric}}
+\title{Check if vector is numeric}
 \usage{
 checkNumeric(x)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 }
 \value{
 Breaks function and returns error message if x
-is non-numeric
+is non-numeric.
 }
 \description{
-Wrapper - check if vector is numeric
+Wrapper for \code{is.\link[base]{numeric}}.
 }
 

@@ -8,9 +8,9 @@
   verbose = TRUE)
 }
 \arguments{
-\item{xall}{A numeric vector}
+\item{xall}{A numeric vector.}
 
-\item{yall}{A numeric vector}
+\item{yall}{A numeric vector.}
 
 \item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
 
@@ -19,15 +19,21 @@
 \item{verbose}{Logical. Should progress be printed?}
 }
 \value{
-A data frame with local regressions ranked by metric L following raking method chosen by argument \code{method}.
+A data frame with local regressions ranked by metric \code{L} following raking method chosen by argument \code{method}.
 }
 \description{
-Ranking local linear regressions
+Ranking local linear regressions.
 }
 \details{
 To be completed.
 }
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+}
 \seealso{
-\code{locReg}
+\code{\link{locReg}}.
 }
 

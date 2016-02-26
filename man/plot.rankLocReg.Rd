@@ -7,22 +7,27 @@
 \method{plot}{rankLocReg}(x, ..., rank = 1)
 }
 \arguments{
-\item{x}{An object of class \code{rankLocReg}}
+\item{x}{An object of class \code{rankLocReg}.}
 
 \item{...}{Other parameters to be passed through to plotting functions.}
 
-\item{rank}{Position, as in row number from input \code{allRegs}, of local regression to be plotted.}
+\item{rank}{Position, as in row number from input \code{x}, of local regression to be plotted.}
 }
 \value{
-A 5-plot panel
+Generates a scatterplot + residual-plot diagnostics for chosen local regression.
 }
 \description{
-Plotting chosen local linear regression
+Plotting chosen local linear regression.
 }
-\details{
-Generates a scatterplot + residual-plot diagnostics for chosen local regression
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+# plot best local regression
+plot(allRegs, rank=1)
 }
 \seealso{
-\code{rankLocReg.default}
+\code{\link{rankLocReg.default}}.
 }
 

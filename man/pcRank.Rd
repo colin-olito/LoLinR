@@ -2,17 +2,17 @@
 % Please edit documentation in R/functions.R
 \name{pcRank}
 \alias{pcRank}
-\title{Calculate the percentile values of a vector x}
+\title{Calculate the percentile values of x}
 \usage{
 pcRank(x)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 }
 \value{
-A numeric vector of percentiles truncated between 0 and 1
+A numeric vector of percentiles truncated between 0 and 1.
 }
 \description{
-Calculate the percentile values of a vector x
+Calculate the percentile values of a vector x.
 }
 

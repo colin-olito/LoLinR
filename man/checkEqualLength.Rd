@@ -2,19 +2,19 @@
 % Please edit documentation in R/functions.R
 \name{checkEqualLength}
 \alias{checkEqualLength}
-\title{Check Equal}
+\title{Check for equal lengths}
 \usage{
 checkEqualLength(x, y)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 
-\item{y}{A numeric vector}
+\item{y}{A numeric vector.}
 }
 \value{
-logical
+Logical.
 }
 \description{
-Wrapper - Checks that lengths of inputs x and y are equal
+Wrapper - Checks that lengths of inputs x and y are equal.
 }
 

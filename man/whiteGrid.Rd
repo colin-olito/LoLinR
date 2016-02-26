@@ -7,9 +7,9 @@
 whiteGrid(...)
 }
 \arguments{
-\item{...}{Additional arguments to internal function \code{proportionalLabel}}
+\item{...}{Additional arguments to internal function \code{\link{proportionalLabel}}.}
 }
 \description{
-Draw equally-spaced white lines on plot window
+Draw equally-spaced white lines on plot window.
 }
 

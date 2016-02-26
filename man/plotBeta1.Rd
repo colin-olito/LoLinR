@@ -7,15 +7,22 @@
 plotBeta1(allRegs)
 }
 \arguments{
-\item{allRegs}{An object of class \code{rankLocReg}}
+\item{allRegs}{An object of class \code{rankLocReg}.}
 }
 \description{
-Distribution of all local slopes
+Distribution of all local slopes.
 }
 \details{
-Generates a distribution of all local regression slopes
+Generates a distribution of all local regression slopes.
+}
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+# rank L metric by method 'eq'
+allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+plotBeta1(allRegs)
 }
 \seealso{
-\code{rankLocReg.default}
+\code{\link{rankLocReg.default}}
 }
 

@@ -2,23 +2,23 @@
 % Please edit documentation in R/functions.R
 \name{skew}
 \alias{skew}
-\title{Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient)}
+\title{Sample skewness}
 \usage{
 skew(x, na.rm = TRUE)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 
 \item{na.rm}{Logical. Should NAs be removed?}
 }
 \value{
-A numeric vector of length 1
+A numeric vector of length 1.
 }
 \description{
-Sample skewness
+Sample skewness (Fisher-Pearson Standardized Third Moment Coefficient).
 }
 \details{
-This function is a dependency for \code{findLocLin}
+This function is a dependency for \code{\link{rankLocReg}}
 where it is used to calculate the (sample) skewness of standardized residuals.
 }
 

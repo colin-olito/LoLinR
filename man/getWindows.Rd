@@ -2,13 +2,12 @@
 % Please edit documentation in R/functions.R
 \name{getWindows}
 \alias{getWindows}
-\title{Get all possible windows between specified alpha
-and 1}
+\title{Get all possible windows}
 \usage{
 getWindows(x, alpha)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector.}
 
 \item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
 }
@@ -16,11 +15,12 @@ getWindows(x, alpha)
 A matrix of vector positions, with starting value on first column and ending value on second column.
 }
 \description{
-Get all possible windows
+Get all possible windows between specified alpha.
+and 1
 }
 \details{
-This function is a dependency for \code{findLocLin}
+This function is a dependency for \code{\link{rankLocReg}}
 where it is used to extract all local windows
-for local regressions. alpha must be higher than 0 and lower or equal to 1.
+for local regressions. \code{alpha} must be higher than 0 and lower or equal to 1.
 }
 

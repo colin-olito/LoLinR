@@ -8,22 +8,22 @@ proportionalLabel(px, py, lab, adj = c(0, 1), text = TRUE, log = FALSE,
   ...)
 }
 \arguments{
-\item{px}{Relative x-axis position (in proportion) where character is to be plotted}
+\item{px}{Relative x-axis position (in proportion) where character is to be plotted.}
 
-\item{py}{Relative y-axis position (in proportion) where character is to be plotted}
+\item{py}{Relative y-axis position (in proportion) where character is to be plotted.}
 
-\item{lab}{Plotted text. Works if argument \code{text} is TRUE.}
+\item{lab}{Plotted text. Works if argument \code{\link[graphics]{text}} is \code{TRUE}.}
 
-\item{adj}{See argument of same name in R base function \code{par}}
+\item{adj}{See argument of same name in R base function \code{\link[graphics]{par}}.}
 
 \item{text}{Logical. Should text or points be plotted?}
 
-\item{log}{Used if the original plot uses the argument log, e.g. log='x', log='y' or log='xy'}
+\item{log}{Used if the original plot uses the argument log, e.g. \code{log='x'}, \code{log='y'} or \code{log='xy'}.}
 
-\item{...}{Additional arguments to R base function \code{text}}
+\item{...}{Additional arguments to R base function \code{\link[graphics]{text}}.}
 }
 \description{
-Plot text or points according to relative axis position
+Plot text or points according to relative axis position.
 }
 \author{
 Adapted by Diego Barneche from original version by Richard G. FitzJohn.

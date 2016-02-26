@@ -7,14 +7,14 @@
 rounded(value, precision = 1)
 }
 \arguments{
-\item{value}{A numeric vector}
+\item{value}{A numeric vector.}
 
-\item{precision}{number of rounding digits}
+\item{precision}{Number of rounding digits.}
 }
 \value{
-A character vector
+A character vector.
 }
 \description{
-Create nice rounded numbers for plotting
+Internal. Create nice rounded numbers for plotting.
 }
 
