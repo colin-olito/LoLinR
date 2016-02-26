@@ -3,9 +3,16 @@
 \docType{data}
 \name{thinned_cockroach_data}
 \alias{thinned_cockroach_data}
-\title{Dataset 4}
-\format{A data frame with ... rows and ... variables:}
+\title{CO2 production in a speckled cockroach}
+\format{A data frame with 392 rows and 2 variables:
+\itemize{
+		\item Time: time in seconds
+		\item CO2.ppm: Rate of CO2 concentration in ppm
+}}
 \description{
-A dataset containing blah
+A dataset containing CO2 production data by a speckled cockroach. This
+dataset represents a small example of data used in analyses described in Schimpf
+et al. 2011. Cockroaches that exchange respiratory gases discontinuously
+survive food and water restriction. Evolution 66: 597--604.
 }
 

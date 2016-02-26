@@ -14,6 +14,6 @@
 }}
 \description{
 A dataset containing VO2 time series for 4 indivudal sea urchins.
- The variables are as follows
+Data are provided by Colin Olito (unpublished data).
 }
 

@@ -3,9 +3,16 @@
 \docType{data}
 \name{thinned_cormorant_data}
 \alias{thinned_cormorant_data}
-\title{Dataset 5}
-\format{A data frame with ... rows and ... variables:}
+\title{O2 consumption data -- flow-through respirometry for cormorants}
+\format{A data frame with 447 rows and 2 variables:
+\itemize{
+		\item Time: time in hours
+		\item VO2.ml.min: Rate of oxygen consumption (mL O2/min)
+}}
 \description{
-A dataset containing blah
+A dataset containing O2 consumption data for a single Great cormorant. This
+dataset represents a small example of data used for analyses described in White
+et al. 2011. Metabolic rate throughout the annual cycle reveals the demands
+of an Arctic existence in Great Cormorants. Ecology 92: 475--486.
 }
 

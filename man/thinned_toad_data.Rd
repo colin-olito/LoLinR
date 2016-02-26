@@ -3,9 +3,12 @@
 \docType{data}
 \name{thinned_toad_data}
 \alias{thinned_toad_data}
-\title{Dataset 6}
+\title{O2 consumption in a cane toad}
 \format{A data frame with ... rows and ... variables:}
 \description{
-A dataset containing blah
+A dataset containing O2 consumption data for a cane toad. This dataset
+represents a small example of data used for analyses described in Halsey and
+White. 2010. Measuring energetics and behaviour using accelerometry in cane
+toads Bufo marinus. PLoS One 5: e10170.
 }
 
