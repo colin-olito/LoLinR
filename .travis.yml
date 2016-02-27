@@ -1,3 +1,8 @@
 language: R
 sudo: required
 warnings_are_errors: true
+before_install:
+  - curl -OL https://raw.githubusercontent.com/travis-ci/travis-build/68cdaaf2cfcad54671c3b5896cd867e21a63c737/lib/travis/build/templates/header.sh
+  - chmod 755 ./header.sh
+
+script: ./header.sh travis_wait
