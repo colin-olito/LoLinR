@@ -551,15 +551,19 @@ plotBeta1 <- function(allRegs) {
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
-          x       =  min(locFit$b1) + (0.8 * (abs(range(locFit$b1)[2] - range(locFit$b1)[1]))),
-          y       =  0.95 * max(density(locFit$b1)$y),
+          x       =  usr[2],
+          y       =  usr[4],
           legend  =  c(expression(paste(italic(L))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),
           lwd     =  4,
           lty     =  c(1, 2, 3),
           col     =  c(c1, c2, c3),
-          cex     =  1
+          cex     =  1,
+          xjust   =  1,
+          yjust   =  1,
+          bty     =  'n',
+          border  =  NA
     )
 }
 
