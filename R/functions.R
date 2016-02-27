@@ -9,6 +9,7 @@
 #' @param y A numeric vector.
 #' @return A data frame with complete cases.
 #' @author Diego Barneche.
+#' @export
 stripNAs  <-  function(x, y) {
     dat  <-  data.frame(x, y)
     dat[complete.cases(dat), ]
@@ -21,6 +22,7 @@ stripNAs  <-  function(x, y) {
 #' @return Breaks function and returns error message if x
 #' is non-numeric.
 #' @author Diego Barneche.
+#' @export
 checkNumeric  <-  function(x) {
     xNumeric  <-  is.numeric(x)
     if(!xNumeric)
@@ -34,6 +36,7 @@ checkNumeric  <-  function(x) {
 #' @param y A numeric vector.
 #' @return Logical.
 #' @author Colin Olito and Diego Barneche.
+#' @export
 checkEqualLength  <-  function(x, y) {
     equalLength  <-  length(x) == length(y)
     if(!equalLength)
@@ -565,7 +568,7 @@ plotBeta1 <- function(allRegs) {
 #' @title Creates transparent colours
 #' @param col Colour.
 #' @param opacity Relative y-axis position (in proportion) where character is to be plotted.
-#' @author Richard G. FitzJohn.
+#' @export
 transparentColor <- function(col, opacity=0.5) {
     if (length(opacity) > 1 && any(is.na(opacity))) {
         n        <-  max(length(col), length(opacity))
@@ -591,7 +594,7 @@ transparentColor <- function(col, opacity=0.5) {
 #' @param text Logical. Should text or points be plotted?
 #' @param log Used if the original plot uses the argument log, e.g. \code{log='x'}, \code{log='y'} or \code{log='xy'}.
 #' @param ... Additional arguments to R base function \code{\link[graphics]{text}}.
-#' @author Adapted by Diego Barneche from original version by Richard G. FitzJohn.
+#' @export
 proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
     usr  <-  par('usr')
     x.p  <-  usr[1] + px*(usr[2] - usr[1])
@@ -618,6 +621,7 @@ proportionalLabel <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ..
 #' @title Equally-spaced white lines on plot window
 #' @param ... Additional arguments to internal function \code{\link{proportionalLabel}}.
 #' @author Diego Barneche
+#' @export
 whiteGrid  <-  function(...) {
     proportionalLabel(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
     proportionalLabel(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5, ...)
@@ -636,6 +640,7 @@ whiteGrid  <-  function(...) {
 #' @param precision Number of rounding digits.
 #' @return A character vector.
 #' @author Diego Barneche.
+#' @export
 rounded  <-  function(value, precision=1) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }

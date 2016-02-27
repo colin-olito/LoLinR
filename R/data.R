@@ -1,6 +1,6 @@
 #' O2 consumption data for sea urchins
 #'
-#' A dataset containing VO2 time series for 4 indivudal sea urchins.
+#' A dataset containing VO2 time series for 4 individual sea urchins.
 #' Data are provided by Colin Olito (unpublished data).
 #'
 #' @format A data frame with 166 rows and 5 variables:

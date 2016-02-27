@@ -25,7 +25,4 @@ proportionalLabel(px, py, lab, adj = c(0, 1), text = TRUE, log = FALSE,
 \description{
 Plot text or points according to relative axis position.
 }
-\author{
-Adapted by Diego Barneche from original version by Richard G. FitzJohn.
-}
 

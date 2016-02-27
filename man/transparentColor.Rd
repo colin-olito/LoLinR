@@ -14,7 +14,4 @@ transparentColor(col, opacity = 0.5)
 \description{
 Creates transparent colours
 }
-\author{
-Richard G. FitzJohn.
-}
 
