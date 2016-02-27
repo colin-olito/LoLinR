@@ -10,7 +10,7 @@ vignette: >
 ---
 
 ```{r, results="hide", warnings=FALSE, echo=FALSE, message=FALSE}
-library(LoLinR)
+devtools::load_all()
 ```
 
 In this `html_vignette`, we introduce the `LoLinR` package, which provides tools to implement local linear regression techniques for estimating monotonic rates from time-series or trace data in a statistically robust and reproducible fashion. The methods are a modification of traditional Loess regression techniques built around the wrapper function `rankLocReg()`. 
@@ -23,15 +23,25 @@ Extract from the paper.
 
 We here use respiration data from the sea urchin *species name*, common to Port Phillip Bay in Melbourne, Australia. *Quickly describe method, units of both axes.*
 
-```{r}  
+```{r, fig.width=5, fig.height=5}  
 data(TestO2data)
-plot(D ~ time, TestO2data)
+par(omi=rep(0.3, 4))
+plot(D ~ time, data=TestO2data, 
+    xlab='Time (minutes)', ylab=substitute('Volume O'[2]~' (mL)'), type='n', axes=FALSE)
+usr  <-  par('usr')
+rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+whiteGrid()
+box()
+points(TestO2data$D ~ TestO2data$time, pch=16, col=transparentColor('dodgerblue2', 0.6), cex=1.1)
+axis(1)
+axis(2, las=1)
 ```
   
 Describe behaviour of data. We are interested in the most stable rate of change, which in theory should represent the resting metabolic rate.
 
 ```{r}
-urchinRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)  
+urchinRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.2, 
+    method="eq", verbose=TRUE)  
 ```
 
 The main function `rankLocReg` runs all possible local regressions (on adjacent data points) with minimum window size `alpha`. It chooses one of three methods/metrics (`ns`, `eq` or `pc` -- default to `ns`, see below for explanation of each method) to rank the best local regression. It outputs an object of class `rankLocReg`  
@@ -81,17 +91,17 @@ plot(urchinRegs, rank=1)
     plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(outy ~ outx, pch=16, col=LoLinR:::transparentColor('black', 0.2), cex=1.2)
+    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
     points(y1 ~ x1, col='dodgerblue', cex=1.2)
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=LoLinR:::rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=LoLinR:::rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
     # standardized residuals ~ x
     par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
@@ -100,11 +110,11 @@ plot(urchinRegs, rank=1)
     plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ x1, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ x1, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf1  <-  loess(resids ~ x1)
@@ -114,11 +124,11 @@ plot(urchinRegs, rank=1)
     plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ yHat, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ yHat, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf2  <-  loess(resids ~ yHat)
@@ -130,11 +140,11 @@ plot(urchinRegs, rank=1)
     plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(qqPlot$y ~ qqPlot$x, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(qqPlot$y ~ qqPlot$x, pch=16, col=transparentColor('dodgerblue', 0.5))
     qqline(resids, col='tomato')
     
     # histogram of standardized residuals
@@ -142,14 +152,14 @@ plot(urchinRegs, rank=1)
     plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
     densities  <-  histPlot$density
     breakPts   <-  histPlot$breaks
     for(j in seq_along(densities)) {
-        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=LoLinR:::transparentColor('dodgerblue', 0.5))
+        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=transparentColor('dodgerblue', 0.5))
     }
 ```
 One can also inspect the best 25 local regressions following the chosen method  
@@ -174,7 +184,7 @@ outputRankLocRegPlot(urchinRegs)
         plot(allRegs$yall ~ allRegs$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(allRegs$yall), (max(allRegs$yall) + 0.25*(max(allRegs$yall) - min(allRegs$yall)))))
         usr  <-  par('usr')
         rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-        LoLinR:::whiteGrid()
+        whiteGrid()
         box()
 
         # check whether axes and labels are to be plotted
@@ -183,10 +193,10 @@ outputRankLocRegPlot(urchinRegs)
         if(i %in% 21:25)
             axis(1, cex.axis=0.5, mgp=c(3, 0.5, 0))
         
-        points(outy ~ outx, pch=16, col=LoLinR:::transparentColor('black', 0.2), cex=1.2)
+        points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
         points(y ~ x, col='dodgerblue', cex=0.8)
         lines(x, locFit$b0[i] + locFit$b1[i]*x, col='black', lwd=2, lty=2)
-        LoLinR:::proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=LoLinR:::rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=LoLinR:::rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
+        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
     }
     mtext('Response', side=2, line=2.5, outer=TRUE)
     mtext('Predictor', side=1, line=2.5, outer=TRUE)
@@ -198,7 +208,7 @@ Or even check the estimated slope for the best local regression for each of the 
 plotBeta1(urchinRegs)
 ```
 
-```{r, echo=FALSE, fig.width=7, fig.height=7}
+```{r, echo=FALSE, fig.width=5, fig.height=5}
 	allRegs  <-  urchinRegs
 
     c1  <-  'tomato'
@@ -210,12 +220,12 @@ plotBeta1(urchinRegs)
     b1Density  <-  density(locFit$b1)
 
     plot(NA, xlab=expression(paste(beta[1])), type='n', axes=FALSE, ylab='Density', cex.lab=1.2, xlim=range(b1Density$x), ylim=c(0, (max(b1Density$y)+0.05*max(b1Density$y))), yaxs='i')
-    LoLinR:::proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=2)
+    proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=1.4)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
-    polygon(c(b1Density$x), c(b1Density$y), col=LoLinR:::transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
+    polygon(c(b1Density$x), c(b1Density$y), col=transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
     axis(1)
     axis(2, las=1)
 
@@ -223,37 +233,42 @@ plotBeta1(urchinRegs)
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
-          x       =  min(locFit$b1) + (0.8 * (abs(range(locFit$b1)[2] - range(locFit$b1)[1]))),
-          y       =  0.95 * max(density(locFit$b1)$y),
+          x       =  usr[2],
+          y       =  usr[4],
           legend  =  c(expression(paste(italic(L))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),
           lwd     =  4,
           lty     =  c(1, 2, 3),
           col     =  c(c1, c2, c3),
-          cex     =  1
+          cex     =  1,
+          xjust   =  1,
+          yjust   =  1,
+          bty     =  'n',
+          border  =  NA
     )
 ```
 
-**3. O_2_ consumption in canned toads**  
+**3. O_2 consumption in cormorant**  
 
-We now show a different utility using a dataset containing O_2_ consumption data for a cane toad. This dataset represents a small example of data used for analyses described in Halsey and White. 2010. Measuring energetics and behaviour using accelerometry in cane toads *Bufo marinus*. PLoS One 5: e10170. 
+We now show a different utility using a dataset containing O_2 consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486.  
 
 *Describe why this flow-through dataset is different*. Using method `eq`:
 
 ```{r}
-data(thinned_toad_data)
-toadRegs  <-  rankLocReg(xall=thinned_toad_data$Time, yall=thinned_toad_data$Fo2, alpha=0.2, method="eq", verbose=FALSE)
+data(thinned_cormorant_data)
+cormRegs  <-  rankLocReg(xall=thinned_cormorant_data$Time, yall=thinned_cormorant_data$VO2.ml.min, alpha=0.2, 
+    method="eq", verbose=FALSE)
 ```
 
 As we can see, the best local regression picked up by method `eq` is not ideal.
 
 ```{r, eval=FALSE}
-plot(toadRegs, rank=1)
+plot(cormRegs, rank=1)
 ```
 
 ```{r, echo=FALSE, fig.width=9, fig.height=5}
-    x     <-  toadRegs
+    x     <-  cormRegs
     rank  <-  1
     #  recover data window for chosen local regression model
     bestwin  <-  c(x$allRegs$Lbound[rank], x$allRegs$Rbound[rank])
@@ -283,17 +298,17 @@ plot(toadRegs, rank=1)
     plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(outy ~ outx, pch=16, col=LoLinR:::transparentColor('black', 0.2), cex=1.2)
+    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
     points(y1 ~ x1, col='dodgerblue', cex=1.2)
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=LoLinR:::rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=LoLinR:::rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
     # standardized residuals ~ x
     par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
@@ -302,11 +317,11 @@ plot(toadRegs, rank=1)
     plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ x1, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ x1, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf1  <-  loess(resids ~ x1)
@@ -316,11 +331,11 @@ plot(toadRegs, rank=1)
     plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ yHat, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ yHat, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf2  <-  loess(resids ~ yHat)
@@ -332,11 +347,11 @@ plot(toadRegs, rank=1)
     plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(qqPlot$y ~ qqPlot$x, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(qqPlot$y ~ qqPlot$x, pch=16, col=transparentColor('dodgerblue', 0.5))
     qqline(resids, col='tomato')
     
     # histogram of standardized residuals
@@ -344,25 +359,25 @@ plot(toadRegs, rank=1)
     plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
     densities  <-  histPlot$density
     breakPts   <-  histPlot$breaks
     for(j in seq_along(densities)) {
-        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=LoLinR:::transparentColor('dodgerblue', 0.5))
+        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=transparentColor('dodgerblue', 0.5))
     }
 ```
 
 When inspecting the distribution of all local regression slopes, we see that the percentage method might be better  
 
 ```{r, eval=FALSE}
-plotBeta1(toadRegs)
+plotBeta1(cormRegs)
 ```
 
-```{r, echo=FALSE, fig.width=7, fig.height=7}
-	allRegs  <-  toadRegs
+```{r, echo=FALSE, fig.width=5, fig.height=5}
+	allRegs  <-  cormRegs
 
     c1  <-  'tomato'
     c2  <-  'darkolivegreen'
@@ -373,12 +388,12 @@ plotBeta1(toadRegs)
     b1Density  <-  density(locFit$b1)
 
     plot(NA, xlab=expression(paste(beta[1])), type='n', axes=FALSE, ylab='Density', cex.lab=1.2, xlim=range(b1Density$x), ylim=c(0, (max(b1Density$y)+0.05*max(b1Density$y))), yaxs='i')
-    LoLinR:::proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=2)
+    proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=1.4)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
-    polygon(c(b1Density$x), c(b1Density$y), col=LoLinR:::transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
+    polygon(c(b1Density$x), c(b1Density$y), col=transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
     axis(1)
     axis(2, las=1)
 
@@ -386,26 +401,31 @@ plotBeta1(toadRegs)
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
-          x       =  min(locFit$b1) + (0.8 * (abs(range(locFit$b1)[2] - range(locFit$b1)[1]))),
-          y       =  0.95 * max(density(locFit$b1)$y),
+          x       =  usr[2],
+          y       =  usr[4],
           legend  =  c(expression(paste(italic(L))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),
           lwd     =  4,
           lty     =  c(1, 2, 3),
           col     =  c(c1, c2, c3),
-          cex     =  1
+          cex     =  1,
+          xjust   =  1,
+          yjust   =  1,
+          bty     =  'n',
+          border  =  NA
     )
 ```
 
 So we can easily re-sort the output `data.frame` of local regressions using method `pc`
 
 ```{r, eval=FALSE}
-toadRegs$allRegs  <-  toadRegs$allRegs[order(toadRegs$allRegs$Lpc), ]
-plot(toadRegs, rank=1)
+cormRegs$allRegs  <-  cormRegs$allRegs[order(cormRegs$allRegs$Lpc), ]
+plot(cormRegs, rank=1)
 ```
 ```{r, echo=FALSE, fig.width=9, fig.height=5}
-    x     <-  toadRegs
+    cormRegs$allRegs  <-  cormRegs$allRegs[order(cormRegs$allRegs$Lpc), ]
+    x     <-  cormRegs
     rank  <-  1
     #  recover data window for chosen local regression model
     bestwin  <-  c(x$allRegs$Lbound[rank], x$allRegs$Rbound[rank])
@@ -435,17 +455,17 @@ plot(toadRegs, rank=1)
     plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(outy ~ outx, pch=16, col=LoLinR:::transparentColor('black', 0.2), cex=1.2)
+    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
     points(y1 ~ x1, col='dodgerblue', cex=1.2)
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=LoLinR:::rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=LoLinR:::rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
-    LoLinR:::proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    LoLinR:::proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
+    proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
     # standardized residuals ~ x
     par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
@@ -454,11 +474,11 @@ plot(toadRegs, rank=1)
     plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ x1, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ x1, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf1  <-  loess(resids ~ x1)
@@ -468,11 +488,11 @@ plot(toadRegs, rank=1)
     plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(resids ~ yHat, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(resids ~ yHat, pch=16, col=transparentColor('dodgerblue', 0.5))
     abline(h=0, col=1, lwd=2)
     abline(h=c(-2, 2), lty=2)
     lf2  <-  loess(resids ~ yHat)
@@ -484,11 +504,11 @@ plot(toadRegs, rank=1)
     plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
-    points(qqPlot$y ~ qqPlot$x, pch=16, col=LoLinR:::transparentColor('dodgerblue', 0.5))
+    points(qqPlot$y ~ qqPlot$x, pch=16, col=transparentColor('dodgerblue', 0.5))
     qqline(resids, col='tomato')
     
     # histogram of standardized residuals
@@ -496,14 +516,14 @@ plot(toadRegs, rank=1)
     plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    LoLinR:::whiteGrid()
+    whiteGrid()
     box()
     axis(1, cex.axis=0.9)
     axis(2, las=1, cex.axis=0.9)
     densities  <-  histPlot$density
     breakPts   <-  histPlot$breaks
     for(j in seq_along(densities)) {
-        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=LoLinR:::transparentColor('dodgerblue', 0.5))
+        polygon(c(breakPts[j], breakPts[j+1], breakPts[j+1], breakPts[j], breakPts[j]), c(rep(usr[3], 2), rep(densities[j], 2), usr[3]), border='dodgerblue', col=transparentColor('dodgerblue', 0.5))
     }
 ```
 
