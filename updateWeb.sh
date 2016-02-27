@@ -1,14 +1,17 @@
 #!/bin/sh
 set -e
 
-Rscript -e 'devtools::build_vignettes()'
-
-DOC_DIR=inst/doc
 WEB_DIR=inst/web
 VIG_DIR=${WEB_DIR}/vignettes
 
-mkdir ${WEB_DIR}
-mkdir -p ${VIG_DIR}
+if [ ! -d "$VIG_DIR" ]
+then
+	mkdir -p ${VIG_DIR}
+fi
+
+Rscript -e 'devtools::build_vignettes()'
+
+DOC_DIR=inst/doc
 mv ${DOC_DIR}/*.html ${VIG_DIR}
 
 VERSION=$(git rev-parse --short HEAD)
