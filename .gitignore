@@ -88,3 +88,5 @@ checkPackage.R
 LoLinR.Rcheck/
 LoLinR*tar.gz
 inst/doc
+inst/web
+
