@@ -43,6 +43,39 @@ checkEqualLength  <-  function(x, y) {
         stop('x and y must be of equal length')
 }
 
+#' Thin large data sets to contain fewer observations
+#'
+#' @title Thin a large data set
+#' @param xall A numeric vector.
+#' @param yall A numeric vector.
+#' @param by An integer.
+#' @return A list of data frames with thinned observations.
+#' @author Colin Olito.
+#' @export
+thinData  <-  function(xall, yall, by=2) {
+
+    # make sure input does not contain characters
+    checkNumeric(c(xall, yall))
+
+    # make sure that all NAs are dealt with
+    dat   <-  stripNAs(xall, yall)
+
+    # thin data set
+    keep  <-  seq(from=1, to=nrow(dat), by=by)
+    
+    # store thinned data set(s) as list
+    newData    <-  list()
+    listNames  <-  c()
+    for(i in 1:by) {
+        thin_dat             <-  dat[(keep + (i - 1)),]
+        newData[[i]]         <-  thin_dat[complete.cases(thin_dat), ]
+        names(newData[[i]])  <-  c("x_thin", "y_thin")
+        listNames[i]         <-  paste("newData", i, sep="")
+    }
+    names(newData)  <-  listNames
+    return(newData)
+}
+
 #' Calculate the percentile values of a vector x.
 #'
 #' @title Calculate the percentile values of x
