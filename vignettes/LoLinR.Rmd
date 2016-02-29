@@ -253,11 +253,14 @@ plotBeta1(urchinRegs)
 
 We now show a different utility using a dataset containing O~2~ consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486.  
 
+Here we thin this dataset to speed up computation time using the package function `thinData`. *Explain the rationale better*.
+
 *Describe why this flow-through dataset is different*. Using method `eq`:
 
 ```{r}
 data(thinned_cormorant_data)
-cormRegs  <-  rankLocReg(xall=thinned_cormorant_data$Time, yall=thinned_cormorant_data$VO2.ml.min, alpha=0.2, 
+thinned_cormorant_data  <-  thinData(xall=thinned_cormorant_data$Time, yall=thinned_cormorant_data$VO2.ml.min, by=3)$newData1
+cormRegs  <-  rankLocReg(xall=thinned_cormorant_data$x_thin, yall=thinned_cormorant_data$y_thin, alpha=0.2, 
     method="eq", verbose=FALSE)
 ```
 
