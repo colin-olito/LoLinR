@@ -326,10 +326,21 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' @param alpha Minimum window size, expressed as a proportion of total data. Must be higher than 0 and less-than or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
-#' @details If method is unspecified, default to \code{ns}.
-#' @return Default function \code{\link{rankLocReg.default}}.
+#' @details \code{rankLocReg} is the main function around which \pkg{LoLinR} is built. Given independent and dependent variables
+#' for a time series or trace data set, \code{rankLocReg} tries to find the 'most linear' ordered subset of the full data set. 
+#' This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
+#' according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals, 
+#' 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
+#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}), 
+#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}. 
+#' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
+#' methods using \code{\link{plotBeta1}}.
+#' 
+#' For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
+#' given that this does not compromise the resolution of the data for the question of interest.
+#' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
-#' @seealso \code{\link{rankLocReg.default}}.
+#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -358,10 +369,8 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
 #' methods using \code{\link{plotBeta1}}.
 #' 
-#' In its current form, \code{rankLocReg} takes approximately 5 minutes to process a data set with ~500 observations, and computation 
-#' increases exponentially with the number of observations (due to the exponentially increasing number of local regressions that are 
-#' fitted). For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
-#' given that this does not compromise...
+#' For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
+#' given that this does not compromise the resolution of the data for the question of interest.
 #' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
 #' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
