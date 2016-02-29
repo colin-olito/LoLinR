@@ -77,7 +77,14 @@ checkEqualLength  <-  function(x, y) {
 #' @title Thin a large data set
 #' @param data A data.frame.
 #' @param xy A numeric vector designating the columns where x and y are located in data.
-#' @param by An integer specifying the thinning rate.
+#' @param by An integer specifying the thinning rate. Analogous to the \code{by} argument 
+#' from the \code{seq} command from the \pkg{base} package.
+#' @details This function is used do reduce the size of large data sets to improve
+#' overall computation time for \code{\link{rankLocReg}}. \code{\link{locReg}} takes
+#' approximately 5 minutes to complete for data sets of ~500 observations, and 
+#' computation time increases exponentially with larger data sets. Provided that the
+#' data is of suitably high resolution, thinning larger data sets is a reasonable 
+#' solution for reducing this computation time.
 #' @return A list of data frames with thinned observations.
 #' @author Colin Olito.
 #' #' @examples
@@ -338,10 +345,23 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' @param alpha Minimum window size, expressed as a proportion of total data. Must be higher than 0 and less-than or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
-#' @details If method is unspecified, default to \code{ns}.
+#' @details \code{rankLocReg} is the main function around which \pkg{LoLinR} is built. Given independent and dependent variables
+#' for a time series or trace data set, \code{rankLocReg} tries to find the 'most linear' ordered subset of the full data set. 
+#' This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
+#' according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals, 
+#' 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
+#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}), 
+#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}. 
+#' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
+#' methods using \code{\link{plotBeta1}}.
+#' 
+#' In its current form, \code{rankLocReg} takes approximately 5 minutes to process a data set with ~500 observations, and computation 
+#' increases exponentially with the number of observations (due to the exponentially increasing number of local regressions that are 
+#' fitted). For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
+#' given that this does not compromise...
 #' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
-#' @seealso \code{\link{locReg}}.
+#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
