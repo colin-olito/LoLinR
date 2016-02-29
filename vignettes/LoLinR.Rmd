@@ -17,7 +17,7 @@ In this `html_vignette`, we introduce the `LoLinR` package, which provides tools
 
 **1. Motivation**  
 
-Extract from the paper.
+Extract from the paper. Colin's new change.
 
 **2. Sea urchin data**  
 
