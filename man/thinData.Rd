@@ -11,13 +11,22 @@ thinData(data, xy = c(1, 2), by = 2)
 
 \item{xy}{A numeric vector designating the columns where x and y are located in data.}
 
-\item{by}{An integer specifying the thinning rate.}
+\item{by}{An integer specifying the thinning rate. Analogous to the \code{by} argument
+from the \code{seq} command from the \pkg{base} package.}
 }
 \value{
 A list of data frames with thinned observations.
 }
 \description{
 Thin large data sets to contain fewer observations
+}
+\details{
+This function is used do reduce the size of large data sets to improve
+overall computation time for \code{\link{rankLocReg}}. \code{\link{locReg}} takes
+approximately 5 minutes to complete for data sets of ~500 observations, and
+computation time increases exponentially with larger data sets. Provided that the
+data is of suitably high resolution, thinning larger data sets is a reasonable
+solution for reducing this computation time.
 }
 \examples{
 # load sea urchin respirometry data

@@ -18,13 +18,24 @@ rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 \item{verbose}{Logical. Should progress be printed?}
 }
 \value{
-Default function \code{\link{rankLocReg.default}}.
+A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 }
 \description{
 Wrapper - calls function that creates class \code{rankLocReg}.
 }
 \details{
-If method is unspecified, default to \code{ns}.
+\code{rankLocReg} is the main function around which \pkg{LoLinR} is built. Given independent and dependent variables
+for a time series or trace data set, \code{rankLocReg} tries to find the 'most linear' ordered subset of the full data set.
+This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
+according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals,
+2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
+residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}),
+equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}.
+For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
+methods using \code{\link{plotBeta1}}.
+
+For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
+given that this does not compromise the resolution of the data for the question of interest.
 }
 \examples{
 # load sea urchin respirometry data
@@ -36,6 +47,6 @@ allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, meth
 Colin Olito and Diego Barneche.
 }
 \seealso{
-\code{\link{rankLocReg.default}}.
+\code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
 }
 
