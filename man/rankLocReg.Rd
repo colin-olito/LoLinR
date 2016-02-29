@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{rankLocReg}
 \alias{rankLocReg}
-\title{Ranking local linear regressions}
+\title{Ranking local linear regressions according to linearity}
 \usage{
 rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 }
@@ -11,7 +11,7 @@ rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
 
 \item{yall}{A numeric vector.}
 
-\item{alpha}{Window size. Needs to be higher than 0 and lower or equal to 1.}
+\item{alpha}{Minimum window size, expressed as a proportion of total data. Must be higher than 0 and less-than or equal to 1.}
 
 \item{method}{Ranking method. See details.}
 

@@ -89,7 +89,6 @@ thinData  <-  function(data, xy=c(1,2), by=2) {
 #' @title Calculate the percentile values of x
 #' @param x A numeric vector.
 #' @return A numeric vector of percentiles truncated between 0 and 1.
-#' @author Colin Olito.
 #' @export
 pcRank  <-  function(x) {
     checkNumeric(x)
@@ -282,10 +281,10 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 
 #' Wrapper - calls function that creates class \code{rankLocReg}.
 #'
-#' @title Ranking local linear regressions
+#' @title Ranking local linear regressions according to linearity
 #' @param xall A numeric vector.
 #' @param yall A numeric vector.
-#' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
+#' @param alpha Minimum window size, expressed as a proportion of total data. Must be higher than 0 and less-than or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
 #' @details If method is unspecified, default to \code{ns}.
@@ -304,14 +303,14 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 
 #' Ranking local linear regressions.
 #'
-#' @title Ranking local linear regressions
+#' @title Ranking local linear regressions according to linearity
 #' @param xall A numeric vector.
 #' @param yall A numeric vector.
-#' @param alpha Window size. Needs to be higher than 0 and lower or equal to 1.
+#' @param alpha Minimum window size, expressed as a proportion of total data. Must be higher than 0 and less-than or equal to 1.
 #' @param method Ranking method. See details.
 #' @param verbose Logical. Should progress be printed?
 #' @details If method is unspecified, default to \code{ns}.
-#' @return A data frame with local regressions ranked by metric \code{L} following raking method chosen by argument \code{method}.
+#' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
 #' @seealso \code{\link{locReg}}.
 #' @export
