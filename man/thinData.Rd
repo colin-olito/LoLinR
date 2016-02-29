@@ -4,14 +4,14 @@
 \alias{thinData}
 \title{Thin a large data set}
 \usage{
-thinData(xall, yall, by = 2)
+thinData(data, xy = c(1, 2), by = 2)
 }
 \arguments{
-\item{xall}{A numeric vector.}
+\item{data}{A data.frame.}
 
-\item{yall}{A numeric vector.}
+\item{xy}{A numeric vector designating the columns where x and y are located in data.}
 
-\item{by}{An integer.}
+\item{by}{An integer specifying the thinning rate.}
 }
 \value{
 A list of data frames with thinned observations.

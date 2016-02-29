@@ -46,19 +46,20 @@ checkEqualLength  <-  function(x, y) {
 #' Thin large data sets to contain fewer observations
 #'
 #' @title Thin a large data set
-#' @param xall A numeric vector.
-#' @param yall A numeric vector.
-#' @param by An integer.
+#' @param data A data.frame.
+#' @param xy A numeric vector designating the columns where x and y are located in data.
+#' @param by An integer specifying the thinning rate.
 #' @return A list of data frames with thinned observations.
 #' @author Colin Olito.
 #' @export
-thinData  <-  function(xall, yall, by=2) {
+thinData  <-  function(data, xy=c(1,2), by=2) {
 
     # make sure input does not contain characters
-    checkNumeric(c(xall, yall))
+    checkNumeric(c(data[,xy[1]], data[,xy[2]]))
 
     # make sure that all NAs are dealt with
-    dat   <-  stripNAs(xall, yall)
+    dat         <-  stripNAs(data[,xy[1]], data[,xy[2]])
+    names(dat)  <-  names(data)[xy]
 
     # thin data set
     keep  <-  seq(from=1, to=nrow(dat), by=by)
@@ -69,7 +70,6 @@ thinData  <-  function(xall, yall, by=2) {
     for(i in 1:by) {
         thin_dat             <-  dat[(keep + (i - 1)),]
         newData[[i]]         <-  thin_dat[complete.cases(thin_dat), ]
-        names(newData[[i]])  <-  c("x_thin", "y_thin")
         listNames[i]         <-  paste("newData", i, sep="")
     }
     names(newData)  <-  listNames

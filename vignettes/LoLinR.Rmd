@@ -259,8 +259,8 @@ Here we thin this dataset to speed up computation time using the package functio
 
 ```{r}
 data(thinned_cormorant_data)
-thinned_cormorant_data  <-  thinData(xall=thinned_cormorant_data$Time, yall=thinned_cormorant_data$VO2.ml.min, by=3)$newData1
-cormRegs  <-  rankLocReg(xall=thinned_cormorant_data$x_thin, yall=thinned_cormorant_data$y_thin, alpha=0.2, 
+thinned_cormorant_data  <-  thinData(thinned_cormorant_data, by=3)$newData1
+cormRegs  <-  rankLocReg(xall=thinned_cormorant_data$Time, yall=thinned_cormorant_data$VO2.ml.min, alpha=0.2, 
     method="eq", verbose=FALSE)
 ```
 
