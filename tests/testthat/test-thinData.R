@@ -1,10 +1,8 @@
 context("Thinning data sets")
 
 data(thinned_cormorant_data)
-thin2  <-  thinData(thinned_cormorant_data$Time,
-					thinned_cormorant_data$VO2.ml.min, by=2)
-thin3  <-  thinData(thinned_cormorant_data$Time,
-					thinned_cormorant_data$VO2.ml.min, by=3)
+thin2  <-  thinData(thinned_cormorant_data, xy=c(1,2), by=2)
+thin3  <-  thinData(thinned_cormorant_data, xy=c(1,2), by=3)
 N      <-  nrow(thinned_cormorant_data)
 len21  <-  length(seq(from=1, to=N, by=2))
 len22  <-  length(seq(from=2, to=N, by=2))
@@ -18,8 +16,12 @@ y2       <-  y[1:90]
 yNA      <-  y
 yNA[sample(c(1:100), 5)] <- NA
 yNAtest  <-  yNA[!is.na(yNA)]
-thinNA   <- thinData(xall=x, yall=yNA, by=2)
-charVEC  <- sample(letters, 100, replace=TRUE)
+charVEC  <-  sample(letters, 100, replace=TRUE)
+testDF   <-  data.frame("x"=x, "y"=y, "yNA"=yNA, "charVEC"=as.character(charVEC))
+thinNA   <- thinData(testDF, xy=c(1,3), by=2)
+
+data(TestO2data)
+thinTest  <-  thinData(TestO2data)
 
 test_that("Simple corner cases", {
     # returns correct structure
@@ -36,15 +38,13 @@ test_that("Simple corner cases", {
 	expect_match(any(is.na(thin2$newData2)), "FALSE")
 	expect_match(any(is.na(thin3$newData2)), "FALSE")
 	expect_match(any(is.na(thin3$newData3)), "FALSE")
-	expect_identical(length(thinNA$newData2$y_thin),
+	expect_identical(length(thinNA$newData2$yNA),
 					 length(yNAtest[seq(from=2, to=length(yNAtest), by=2)]))
 
     # returns correct behaviour regardless of input
-    expect_error(thinData(x=x, y=charVEC), "x must be numeric")
+    expect_error(thinData(testDF, xy=c(1,4)), 'data must contain only numeric variables')
 
-    # returns correct behaviour when lengths of x and y differ
-    expect_error(thinData(x=x, y=y2), "arguments imply differing number of rows: 100, 90")
-
-	# correct behaviour when "thin" is missing, defaults to 2
-	expect_identical(length(thinData(x=x, y=y)), 2L)
+	# correct behaviour when "thin" is missing, defaults to first two columns, by=2
+    expect_identical(length(thinTest), 2L)
+    expect_identical(names(TestO2data)[1:2], names(thinTest$newData1))
 })

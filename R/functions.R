@@ -51,11 +51,19 @@ checkEqualLength  <-  function(x, y) {
 #' @param by An integer specifying the thinning rate.
 #' @return A list of data frames with thinned observations.
 #' @author Colin Olito.
+#' #' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' head(TestO2data)
+#' # thin data for individual "D" by 1/2
+#' newData  <-  thinData(TestO2data, xy=c(1,5), by=2)
+#' head(newData[[1]])
 #' @export
 thinData  <-  function(data, xy=c(1,2), by=2) {
-
-    # make sure input does not contain characters
-    checkNumeric(c(data[,xy[1]], data[,xy[2]]))
+    # make sure input does not contain factors
+    isfactor    <-  any(is.factor(data[,xy[1]]), is.factor(data[,xy[2]]))
+    if(isfactor)
+        stop('data must contain only numeric variables')
 
     # make sure that all NAs are dealt with
     dat         <-  stripNAs(data[,xy[1]], data[,xy[2]])

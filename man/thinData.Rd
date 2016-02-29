@@ -19,7 +19,16 @@ A list of data frames with thinned observations.
 \description{
 Thin large data sets to contain fewer observations
 }
+\examples{
+# load sea urchin respirometry data
+data(TestO2data)
+head(TestO2data)
+# thin data for individual "D" by 1/2
+newData  <-  thinData(TestO2data, xy=c(1,5), by=2)
+head(newData[[1]])
+}
 \author{
 Colin Olito.
+#'
 }
 
