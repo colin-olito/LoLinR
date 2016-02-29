@@ -6,7 +6,8 @@ test_that("Simple corner cases", {
     z  <-  rankLocReg(xall=x, yall=y, alpha=0.8, method='eq')
     r  <-  reRank(z, newMethod='pc')
     n  <-  reRank(z, newMethod='ns')
-
+    w  <-  rankLocReg(xall=x, yall=y, alpha=0.8)
+    v  <-  reRank(w, 'eq')
     expect_is(r, class(z))
     expect_is(n, class(r))
     expect_is(r$call, 'call')
@@ -20,4 +21,7 @@ test_that("Simple corner cases", {
     expect_error(reRank(z), 'argument "newMethod" is missing, with no default')
     expect_error(reRank(x), 'x must be of class rankLocReg')
     expect_error(reRank(NULL), 'x must be of class rankLocReg')
+    expect_is(w$call$method, 'NULL')
+    expect_true(v$call$method == 'eq')
+    expect_error(reRank(w, 'ns'), 'ns is already in place')
 })

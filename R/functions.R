@@ -22,6 +22,9 @@ reRank  <-  function(x, newMethod) {
     isRankLocReg  <-  class(x) == 'rankLocReg'
     if(!isRankLocReg)
         stop('x must be of class rankLocReg')
+    isFinalStart  <-  x$method == newMethod
+    if(isFinalStart)
+        stop(paste0(newMethod, ' is already in place'))
     x$call$method  <-  newMethod
     x$method       <-  newMethod
     isNewMethodNs  <-  newMethod == 'ns'
