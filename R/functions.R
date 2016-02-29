@@ -22,9 +22,12 @@ reRank  <-  function(x, newMethod) {
     isRankLocReg  <-  class(x) == 'rankLocReg'
     if(!isRankLocReg)
         stop('x must be of class rankLocReg')
-    x$allRegs  <-  x$allRegs[order(x$allRegs[[paste0('L', newMethod)]]), ]
     x$call$method  <-  newMethod
     x$method       <-  newMethod
+    isNewMethodNs  <-  newMethod == 'ns'
+    if(isNewMethodNs)
+        newMethod  <-  ''
+    x$allRegs  <-  x$allRegs[order(x$allRegs[[paste0('L', newMethod)]]), ]
     x
 }
 
