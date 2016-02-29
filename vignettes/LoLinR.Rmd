@@ -423,12 +423,11 @@ plotBeta1(cormRegs)
 So we can easily re-sort the output `data.frame` of local regressions using method `pc`
 
 ```{r, eval=FALSE}
-cormRegs$allRegs  <-  cormRegs$allRegs[order(cormRegs$allRegs$Lpc), ]
+cormRegs  <-  reRank(cormRegs, newMethod='pc')
 plot(cormRegs, rank=1)
 ```
 ```{r, echo=FALSE, fig.width=9, fig.height=5}
-    cormRegs$allRegs  <-  cormRegs$allRegs[order(cormRegs$allRegs$Lpc), ]
-    x     <-  cormRegs
+    x     <-  reRank(cormRegs, newMethod='pc')
     rank  <-  1
     #  recover data window for chosen local regression model
     bestwin  <-  c(x$allRegs$Lbound[rank], x$allRegs$Rbound[rank])

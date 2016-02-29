@@ -1,0 +1,18 @@
+context("Re-ranking rankLocReg")
+
+test_that("Simple corner cases", {
+    x  <-  sort(rnorm(100))
+    y  <-  2 + 4*x + rnorm(100)
+    z  <-  rankLocReg(xall=x, yall=y, alpha=0.8, method='eq')
+    r  <-  reRank(z, newMethod='pc')
+
+    expect_is(r, class(z))
+    expect_is(r$call, 'call')
+    expect_false(z$method == r$method)
+    expect_false(z$call == r$call)
+    expect_true(z$method == 'eq')
+    expect_true(r$method == 'pc')
+    expect_error(reRank(z), 'argument "newMethod" is missing, with no default')
+    expect_error(reRank(x), 'x must be of class rankLocReg')
+    expect_error(reRank(NULL), 'x must be of class rankLocReg')
+})

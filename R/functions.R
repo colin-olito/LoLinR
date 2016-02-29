@@ -2,6 +2,32 @@
 # MAIN PACKAGE FUNCTIONS
 ########################
 
+#' Re-rank an object of class \code{rankLocReg}.
+#'
+#' @title Re-rank \code{rankLocReg}
+#' @param x An object of class \code{rankLocReg}.
+#' @param newMethod Method with which object of class \code{rankLocReg} should be re-ranked.
+#' @details This function also updates \code{x$call} and \code{x$method}.
+#' @return An object of class \code{rankLocReg}.
+#' @author Diego Barneche.
+#' @export
+#' @examples
+#' # load sea urchin respirometry data
+#' data(TestO2data)
+#' x  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.8, method="eq", verbose=TRUE)
+#' x2  <-  reRank(x, newMethod="pc")
+#' # check outputs
+#' x$call; x2$call; x$method; x2$method
+reRank  <-  function(x, newMethod) {
+    isRankLocReg  <-  class(x) == 'rankLocReg'
+    if(!isRankLocReg)
+        stop('x must be of class rankLocReg')
+    x$allRegs  <-  x$allRegs[order(x$allRegs[[paste0('L', newMethod)]]), ]
+    x$call$method  <-  newMethod
+    x$method       <-  newMethod
+    x
+}
+
 #' Wrapper - strips NA from input x and y.
 #'
 #' @title Remove NA
