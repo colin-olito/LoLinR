@@ -249,9 +249,9 @@ plotBeta1(urchinRegs)
     )
 ```
 
-**3. O_2 consumption in cormorant**  
+**3. O~2~ consumption in cormorant**  
 
-We now show a different utility using a dataset containing O_2 consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486.  
+We now show a different utility using a dataset containing O~2~ consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486.  
 
 *Describe why this flow-through dataset is different*. Using method `eq`:
 
