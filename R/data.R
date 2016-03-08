@@ -15,6 +15,27 @@
 #' @docType data
 NULL
 
+#' O2 consumption data for Bugula neritina
+#'
+#' A dataset containing O2 saturation time series for 4 individual 
+#' Bugula neritina larvae. These data representa  small subset of
+#' the data used in analyses described in Pettersen A.K., White C.R., 
+#' Marshall D.J. 2015. Why does offspring size affect performance? 
+#' Integrating metabolic scaling with life-history theory. Proc. Roy.
+#' Soc. B 282:20151946. (doi:10.1098/rspb.2015.1946)
+#'
+#' @format A data frame with 107 rows and 5 variables:
+#' \itemize{
+#'		\item Time.s: time in seconds
+#'		\item A2: O2 saturation (%) data for individual larvae in chamber A2
+#'		\item A3: O2 saturation (%) data for individual larvae in chamber A3
+#'		\item C2: O2 saturation (%) data for individual larvae in chamber C2
+#'		\item D3: O2 saturation (%) data for individual larvae in chamber D3
+#' }
+#' @name BugulaData
+#' @docType data
+NULL
+
 #' CO2 production in a speckled cockroach
 #'
 #' A dataset containing CO2 production data by a speckled cockroach. This 
