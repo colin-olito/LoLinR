@@ -25,7 +25,7 @@ Then install `LoLinR` using the following:
 
 ## Contact & bug reporting
 
-LoLinR is in the final stages of development, and will continue to get frequent updates until this process is finished. We currently need beta testing, and encourage users to test the package and report any bugs and or problems by either opening an issue on the github webpate [here](https://github.com/colin-olito/LoLinR/issues).
+LoLinR is in the final stages of development, and will continue to get frequent updates until this process is finished. We currently need beta testing, and encourage users to test the package and report any bugs and or problems by opening an issue on the github webpage [here](https://github.com/colin-olito/LoLinR/issues).
 
 
 
