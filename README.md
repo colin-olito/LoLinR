@@ -21,7 +21,11 @@ Then install `LoLinR` using the following:
 `install_github('colin-olito/LoLinR')`  
 `library(LoLinR)`
 
-`LoLinR` does not currently have any dependencies on other packages.
+`LoLinR` does not currently have any functional dependencies on other packages. However, it loads `lmtest` for the purposes of unit testing.
+
+## Contact & bug reporting
+
+LoLinR is in the final stages of development, and will continue to get frequent updates until this process is finished. We currently need beta testing, and encourage users to test the package and report any bugs and or problems by either opening an issue on the github webpate [here](https://github.com/colin-olito/LoLinR/issues).
 
 
 
