@@ -23,5 +23,5 @@ test_that("Simple corner cases", {
     expect_error(reRank(NULL), 'x must be of class rankLocReg')
     expect_is(w$call$method, 'NULL')
     expect_true(v$call$method == 'eq')
-    expect_error(reRank(w, 'z'), 'ns is already in place')
+    expect_error(reRank(w, 'z'), 'z is already in place')
 })

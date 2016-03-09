@@ -4,7 +4,7 @@
 \alias{rankLocReg}
 \title{Ranking local linear regressions according to linearity}
 \usage{
-rankLocReg(xall, yall, alpha, method = c("ns", "eq", "pc"), verbose = TRUE)
+rankLocReg(xall, yall, alpha, method = c("z", "eq", "pc"), verbose = TRUE)
 }
 \arguments{
 \item{xall}{A numeric vector.}
@@ -29,8 +29,8 @@ for a time series or trace data set, \code{rankLocReg} tries to find the 'most l
 This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
 according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals,
 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
-residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}),
-equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}.
+residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}),
+equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}.
 For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
 methods using \code{\link{plotBeta1}}.
 

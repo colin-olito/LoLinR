@@ -410,7 +410,7 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('z', 'eq', 'pc'), v
     # choose weighting scheme for linearity metric L
     switch(match.arg(method),
         'z' = {
-            allRegs   <-  allRegs[with(allRegs, order(L)), ]
+            allRegs   <-  allRegs[with(allRegs, order(Lz)), ]
         },
         'eq' = {
             allRegs   <-  allRegs[with(allRegs, order(Leq)), ]
