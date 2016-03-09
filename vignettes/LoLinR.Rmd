@@ -44,7 +44,7 @@ urchinRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.2,
     method="eq", verbose=TRUE)  
 ```
 
-The main function `rankLocReg` runs all possible local regressions (on adjacent data points) with minimum window size `alpha`. It chooses one of three methods/metrics (`ns`, `eq` or `pc` -- default to `ns`, see below for explanation of each method) to rank the best local regression. It outputs an object of class `rankLocReg`  
+The main function `rankLocReg` runs all possible local regressions (on adjacent data points) with minimum window size `alpha`. It chooses one of three methods/metrics (`z`, `eq` or `pc` -- default to `z`, see below for explanation of each method) to rank the best local regression. It outputs an object of class `rankLocReg`  
 
 *Explain different methods*
 
@@ -229,7 +229,7 @@ plotBeta1(urchinRegs)
     axis(1)
     axis(2, las=1)
 
-    abline(v=locFit$b1[locFit$L == min(locFit$L)], col=c1, lty=1, lwd=3)
+    abline(v=locFit$b1[locFit$Lz == min(locFit$Lz)], col=c1, lty=1, lwd=3)
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
@@ -400,7 +400,7 @@ plotBeta1(cormRegs)
     axis(1)
     axis(2, las=1)
 
-    abline(v=locFit$b1[locFit$L == min(locFit$L)], col=c1, lty=1, lwd=3)
+    abline(v=locFit$b1[locFit$Lz == min(locFit$Lz)], col=c1, lty=1, lwd=3)
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
