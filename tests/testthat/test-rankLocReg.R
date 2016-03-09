@@ -38,9 +38,9 @@ test_that("Simple corner cases", {
   	# throws error when missing alpha
     expect_error(rankLocReg(xall=x[order(x)], yall=y[order(x)]), 'argument "alpha" is missing, with no default')
 
-    # correct behaviour when method is missing, defaults to 'ns'
+    # correct behaviour when method is missing, defaults to 'z'
     expect_is(rankLocReg(xall=x[order(x)], yall=y[order(x)], alpha=0.8), "rankLocReg")
-    expect_identical(rankLocReg(xall=x[order(x)], yall=y[order(x)], alpha=0.8)$method, "ns")
+    expect_identical(rankLocReg(xall=x[order(x)], yall=y[order(x)], alpha=0.8)$method, "z")
 
     # throws warning when x is unordered
     expect_warning(rankLocReg(xall=x, yall=y, alpha=0.8, method='eq'), "Dataset must be ordered by xall")
