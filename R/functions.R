@@ -497,7 +497,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     points(y1 ~ x1, col='dodgerblue', cex=1.2)
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    proportionalLabel(0.15, 1.1, substitute('Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(0.15, 1.1, substitute(L[meth]~'Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(meth=x$method, pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
     proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
@@ -650,7 +650,7 @@ plotBeta1 <- function(allRegs) {
     legend(
           x       =  usr[2],
           y       =  usr[4],
-          legend  =  c(expression(paste(italic(L))),
+          legend  =  c(expression(paste(italic(L[z]))),
                       expression(paste(italic(L[eq]))),
                       expression(paste(italic(L['%'])))),
           lwd     =  4,
