@@ -22,8 +22,8 @@ This function also updates \code{x$call} and \code{x$method}.
 }
 \examples{
 # load sea urchin respirometry data
-data(TestO2data)
-x  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.8, method="eq", verbose=TRUE)
+data(UrchinData)
+x  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.8, method="eq", verbose=TRUE)
 x2  <-  reRank(x, newMethod="pc")
 # check outputs
 x$call; x2$call; x$method; x2$method

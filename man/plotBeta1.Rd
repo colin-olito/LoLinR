@@ -17,9 +17,9 @@ Generates a distribution of all local regression slopes.
 }
 \examples{
 # load sea urchin respirometry data
-data(TestO2data)
+data(UrchinData)
 # rank L metric by method 'eq'
-allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 plotBeta1(allRegs)
 }
 \author{

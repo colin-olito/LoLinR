@@ -30,10 +30,10 @@ solution for reducing this computation time.
 }
 \examples{
 # load sea urchin respirometry data
-data(TestO2data)
-head(TestO2data)
+data(UrchinData)
+head(UrchinData)
 # thin data for individual "D" by 1/2
-newData  <-  thinData(TestO2data, xy=c(1,5), by=2)
+newData  <-  thinData(UrchinData, xy=c(1,5), by=2)
 head(newData[[1]])
 }
 \author{

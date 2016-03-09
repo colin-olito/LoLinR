@@ -1,5 +1,4 @@
-########################
-# MAIN PACKAGE FUNCTIONS
+######################### MAIN PACKAGE FUNCTIONS
 ########################
 
 #' Re-rank an object of class \code{rankLocReg}.
@@ -13,8 +12,8 @@
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
-#' x  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.8, method="eq", verbose=TRUE)
+#' data(UrchinData)
+#' x  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.8, method="eq", verbose=TRUE)
 #' x2  <-  reRank(x, newMethod="pc")
 #' # check outputs
 #' x$call; x2$call; x$method; x2$method
@@ -92,10 +91,10 @@ checkEqualLength  <-  function(x, y) {
 #' @author Colin Olito.
 #' #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
-#' head(TestO2data)
+#' data(UrchinData)
+#' head(UrchinData)
 #' # thin data for individual "D" by 1/2
-#' newData  <-  thinData(TestO2data, xy=c(1,5), by=2)
+#' newData  <-  thinData(UrchinData, xy=c(1,5), by=2)
 #' head(newData[[1]])
 #' @export
 thinData  <-  function(data, xy=c(1,2), by=2) {
@@ -265,10 +264,10 @@ breuschGodfrey  <-  function(y, x, order=FALSE, fill=0) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' wins  <-  getWindows(x=TestO2data$D, alpha=0.3)
-#' reg   <-  locReg(wins[1, ], xall=TestO2data$time, yall=TestO2data$D, resids=TRUE)
+#' wins  <-  getWindows(x=UrchinData$D, alpha=0.3)
+#' reg   <-  locReg(wins[1, ], xall=UrchinData$time, yall=UrchinData$D, resids=TRUE)
 locReg  <-  function(wins, xall, yall, resids=FALSE) {
     # check that window is ok
     badwin  <-  wins[1] >= wins[2]
@@ -344,9 +343,9 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     UseMethod('rankLocReg')
 }
@@ -377,9 +376,9 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
     
     if(missing(method))
@@ -457,9 +456,9 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
 #' @author Colin Olito and Diego Barneche.
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' # plot best local regression
 #' plot(allRegs, rank=1)
 plot.rankLocReg  <-  function(x, ..., rank=1) {
@@ -575,9 +574,9 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' outputRankLocRegPlot(allRegs)
 outputRankLocRegPlot  <-  function(allRegs) {
     dev.new(width=7, height=7)
@@ -623,9 +622,9 @@ outputRankLocRegPlot  <-  function(allRegs) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' plotBeta1(allRegs)
 plotBeta1 <- function(allRegs) {
 
@@ -765,9 +764,9 @@ rounded  <-  function(value, precision=1) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' summary(allRegs)
 summary.rankLocReg <- function(object, ...) {
     out <- list(
@@ -793,9 +792,9 @@ summary.rankLocReg <- function(object, ...) {
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
-#' data(TestO2data)
+#' data(UrchinData)
 #' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=TestO2data$time, yall=TestO2data$D, alpha=0.3, method="eq", verbose=TRUE)
+#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' summary(allRegs)
 print.summary.rankLocReg <- function(x, ...) {
     cat('Call:\n')

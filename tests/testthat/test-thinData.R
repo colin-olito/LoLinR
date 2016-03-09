@@ -1,9 +1,9 @@
 context("Thinning data sets")
 
-data(thinned_cormorant_data)
-thin2  <-  thinData(thinned_cormorant_data, xy=c(1,2), by=2)
-thin3  <-  thinData(thinned_cormorant_data, xy=c(1,2), by=3)
-N      <-  nrow(thinned_cormorant_data)
+data(CormorantData)
+thin2  <-  thinData(CormorantData, xy=c(1,2), by=2)
+thin3  <-  thinData(CormorantData, xy=c(1,2), by=3)
+N      <-  nrow(CormorantData)
 len21  <-  length(seq(from=1, to=N, by=2))
 len22  <-  length(seq(from=2, to=N, by=2))
 len31  <-  length(seq(from=1, to=N, by=3))
@@ -20,8 +20,8 @@ charVEC  <-  sample(letters, 100, replace=TRUE)
 testDF   <-  data.frame("x"=x, "y"=y, "yNA"=yNA, "charVEC"=as.character(charVEC))
 thinNA   <- thinData(testDF, xy=c(1,3), by=2)
 
-data(TestO2data)
-thinTest  <-  thinData(TestO2data)
+data(UrchinData)
+thinTest  <-  thinData(UrchinData)
 
 test_that("Simple corner cases", {
     # returns correct structure
@@ -46,5 +46,5 @@ test_that("Simple corner cases", {
 
 	# correct behaviour when "thin" is missing, defaults to first two columns, by=2
     expect_identical(length(thinTest), 2L)
-    expect_identical(names(TestO2data)[1:2], names(thinTest$newData1))
+    expect_identical(names(UrchinData)[1:2], names(thinTest$newData1))
 })

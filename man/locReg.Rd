@@ -26,10 +26,10 @@ Local Regression Function.
 }
 \examples{
 # load sea urchin respirometry data
-data(TestO2data)
+data(UrchinData)
 # rank L metric by method 'eq'
-wins  <-  getWindows(x=TestO2data$D, alpha=0.3)
-reg   <-  locReg(wins[1, ], xall=TestO2data$time, yall=TestO2data$D, resids=TRUE)
+wins  <-  getWindows(x=UrchinData$D, alpha=0.3)
+reg   <-  locReg(wins[1, ], xall=UrchinData$time, yall=UrchinData$D, resids=TRUE)
 }
 \author{
 Colin Olito and Diego Barneche.
