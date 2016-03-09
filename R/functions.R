@@ -26,9 +26,6 @@ reRank  <-  function(x, newMethod) {
         stop(paste0(newMethod, ' is already in place'))
     x$call$method  <-  newMethod
     x$method       <-  newMethod
-    isNewMethodNs  <-  newMethod == 'ns'
-    if(isNewMethodNs)
-        newMethod  <-  ''
     x$allRegs  <-  x$allRegs[order(x$allRegs[[paste0('L', newMethod)]]), ]
     x
 }
@@ -331,7 +328,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals, 
 #' 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
 #' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}), 
-#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}. 
+#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}. 
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
 #' methods using \code{\link{plotBeta1}}.
 #' 
@@ -346,7 +343,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' data(UrchinData)
 #' # rank L metric by method 'eq'
 #' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
-rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
+rankLocReg <- function(xall, yall, alpha, method=c('z', 'eq', 'pc'), verbose=TRUE) {
     UseMethod('rankLocReg')
 }
 
@@ -363,8 +360,8 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
 #' according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals, 
 #' 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
-#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}), 
-#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{ns}. 
+#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}), 
+#' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}. 
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
 #' methods using \code{\link{plotBeta1}}.
 #' 
@@ -379,10 +376,10 @@ rankLocReg <- function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TR
 #' data(UrchinData)
 #' # rank L metric by method 'eq'
 #' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
-rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), verbose=TRUE) {
+rankLocReg.default  <-  function(xall, yall, alpha, method=c('z', 'eq', 'pc'), verbose=TRUE) {
     
     if(missing(method))
-        method  <-  'ns'
+        method  <-  'z'
     
     # make sure input does not contain characters
     checkNumeric(c(xall, yall))
@@ -406,13 +403,13 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('ns', 'eq', 'pc'), 
     #  calculate combined metric (L) for linearity & fit
     allRegs$ciRange  <-  allRegs$b1UpCI - allRegs$b1LoCI
     allRegs          <-  allRegs[, c('Lbound', 'Rbound', 'alph', 'b0', 'b1', 'b1LoCI', 'b1UpCI', 'ciRange', 'skew', 'bgN')]
-    allRegs$L        <-  ((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew)) + ((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN)) + ((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange))
+    allRegs$Lz       <-  ((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew)) + ((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN)) + ((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange))
     allRegs$Leq      <-  (((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew)) / (max(((min(abs(allRegs$skew)) + abs(allRegs$skew)) / sd(allRegs$skew))))) + (((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN)) / (max(((allRegs$bgN - min(allRegs$bgN)) / sd(allRegs$bgN))))) + (((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange)) / (max(((allRegs$ciRange - min(allRegs$ciRange)) / sd(allRegs$ciRange)))))
     allRegs$Lpc      <-  ((pcRank(abs(allRegs$skew))) + (pcRank((allRegs$bgN - min(allRegs$bgN)))) + (pcRank((allRegs$ciRange)))) / 3
     
     # choose weighting scheme for linearity metric L
     switch(match.arg(method),
-        'ns' = {
+        'z' = {
             allRegs   <-  allRegs[with(allRegs, order(L)), ]
         },
         'eq' = {
@@ -647,7 +644,7 @@ plotBeta1 <- function(allRegs) {
     axis(1)
     axis(2, las=1)
 
-    abline(v=locFit$b1[locFit$L == min(locFit$L)], col=c1, lty=1, lwd=3)
+    abline(v=locFit$b1[locFit$Lz  == min(locFit$Lz)], col=c1, lty=1, lwd=3)
     abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
     abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
     legend(
