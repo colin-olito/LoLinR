@@ -327,7 +327,7 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' This is accomplished by fitting all possible local linear regressions with minimum window size \code{alpha}, and ranking them
 #' according to the combined linearity metric $L$. $L$ quantifies linearity from 1) the skewness of the standardized residuals, 
 #' 2) the range of the 95% confidence interval around the regression slope $\beta_1$, and 3) auto-correlation among the standardized
-#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="ns"}), 
+#' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}), 
 #' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}. 
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
 #' methods using \code{\link{plotBeta1}}.
