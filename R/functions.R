@@ -497,7 +497,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     points(y1 ~ x1, col='dodgerblue', cex=1.2)
     lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    proportionalLabel(0.15, 1.1, substitute(L[meth]~'Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(meth=x$method, pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 2))), xpd=NA, adj=c(0, 0.5))
+    proportionalLabel(0.15, 1.1, substitute(L[meth]~'Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(meth=x$method, pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 4))), xpd=NA, adj=c(0, 0.5))
     proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
     proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
 
@@ -603,7 +603,7 @@ outputRankLocRegPlot  <-  function(allRegs) {
         points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
         points(y ~ x, col='dodgerblue', cex=0.8)
         lines(x, locFit$b0[i] + locFit$b1[i]*x, col='black', lwd=2, lty=2)
-        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 2))), adj=c(0, 0.5), cex=0.5)
+        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 4))), adj=c(0, 0.5), cex=0.5)
     }
     mtext('Response', side=2, line=2.5, outer=TRUE)
     mtext('Predictor', side=1, line=2.5, outer=TRUE)
