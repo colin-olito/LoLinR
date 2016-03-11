@@ -766,12 +766,20 @@ rounded  <-  function(value, precision=1) {
 #' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' summary(allRegs)
 summary.rankLocReg <- function(object, ...) {
+
+    # Grab best regressions for each weighting scheme
+    Lcompare  <-  data.frame(rbind(object$allRegs[with(object$allRegsallRegs, order(object$allRegs$Lz)),  ][1,],
+                        object$allRegs[with(object$allRegsallRegs, order(object$allRegs$Leq)), ][1,],
+                        object$allRegs[with(object$allRegsallRegs, order(object$allRegs$Lpc)), ][1,]))
+    Lcompare  <-  cbind(c("Lz", "Leq", "Lpc"), Lcompare)
+    names(Lcompare)  <-  c("Metric", names(object$allRegs))
     out <- list(
                 call          =  object$call,
                 data          =  summary(data.frame(xall=object$xall, yall=object$yall)),
                 summaryTable  =  head(object$allRegs),
                 nFits         =  object$nFits,
-                method        =  object$method
+                method        =  object$method,
+                Lcompare      =  Lcompare
            )
 
     class(out) <- 'summary.rankLocReg'
@@ -808,5 +816,9 @@ print.summary.rankLocReg <- function(x, ...) {
 
     cat('Best ', nrow(x$summaryTable), ' local regressions (L-metric ranking) fitted with method ', x$method, '\n')
     print(x$summaryTable)
+    cat('\n')
+
+    cat('Best ranked regressions for each L-metric:\n')
+    print(x$Lcompare)
     cat('\n')
 }
