@@ -330,13 +330,13 @@ locReg  <-  function(wins, xall, yall, resids=FALSE) {
 #' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}), 
 #' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}. 
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
-#' methods using \code{\link{plotBeta1}}.
+#' methods using \code{\link{plot.rankLocReg}}.
 #' 
 #' For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
 #' given that this does not compromise the resolution of the data for the question of interest.
 #' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
-#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
+#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plot.rankLocReg}}.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -363,13 +363,13 @@ rankLocReg <- function(xall, yall, alpha, method=c('z', 'eq', 'pc'), verbose=TRU
 #' residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}), 
 #' equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}. 
 #' For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
-#' methods using \code{\link{plotBeta1}}.
+#' methods using \code{\link{plot.rankLocReg}}.
 #' 
 #' For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
 #' given that this does not compromise the resolution of the data for the question of interest.
 #' @return A data frame with important output from all local regressions, ranked by metric \code{L} following raking method chosen by argument \code{method}.
 #' @author Colin Olito and Diego Barneche.
-#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
+#' @seealso \code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plot.rankLocReg}}.
 #' @export
 #' @examples
 #' # load sea urchin respirometry data
@@ -447,7 +447,7 @@ rankLocReg.default  <-  function(xall, yall, alpha, method=c('z', 'eq', 'pc'), v
 #' @param x An object of class \code{rankLocReg}.
 #' @param ... Other parameters to be passed through to plotting functions.
 #' @param rank Position, as in row number from input \code{x}, of local regression to be plotted.
-#' @return Generates a scatterplot + residual-plot diagnostics for chosen local regression.
+#' @return Generates a distribution of all local regression slopes + residual-plot diagnostics for chosen local regression + scatterplot.
 #' @seealso \code{\link{rankLocReg.default}}.
 #' @export
 #' @author Colin Olito and Diego Barneche.
@@ -472,40 +472,50 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     yHat    <-  fit$yHat
 
     #  residual plots
-    dev.new(width=9, height=5)
+    par(mfrow=c(2, 3), omi=c(0.5, 0.1, 0.5, 0), mai=c(0.6732, 0.5412, 0.8412, 0.2772))
 
-    layout(matrix(c(
-                    rep(c(rep(1, 4), rep(2, 2), rep(3, 2)), 2),
-                    rep(c(rep(1, 4), rep(4, 2), rep(5, 2)), 2)
-                   ), 
-           nrow=4, ncol=8, byrow=TRUE)
-    )
+    # distribution of beta1
+    c1  <-  'tomato'
+    c2  <-  'darkolivegreen'
+    c3  <-  'dodgerblue4'
     
-    #  overall regression plot
-    outy  <-  x$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
-    outx  <-  x$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
+    dLocFit     <-  x$allRegs
+    b1Density  <-  density(dLocFit$b1)
 
-    par(mai=c(1.2, 0.8, 0.8, 0.4), cex=1)
-    plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
+    plot(NA, xlab=expression(paste(beta[1])), type='n', axes=FALSE, ylab='Density', cex.lab=1.2, xlim=c(min(b1Density$x), (max(b1Density$x)+0.4*(max(b1Density$x) - min(b1Density$x)))), ylim=c(0, (max(b1Density$y)+0.05*(max(b1Density$y) - min(b1Density$y)))), yaxs='i')
+    proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
     box()
+    polygon(c(b1Density$x), c(b1Density$y), col=transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
     axis(1, cex.axis=0.9)
-    axis(2, las=1, cex.axis=0.9)
-    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
-    points(y1 ~ x1, col='dodgerblue', cex=1.2)
-    lines(x1, locFit$b0 + locFit$b1*x1, col='black', lwd=2, lty=2)
-    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    proportionalLabel(0.15, 1.1, substitute(L[meth]~'Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(meth=x$method, pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 4))), xpd=NA, adj=c(0, 0.5))
-    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lwd=2, lty=2)
-    proportionalLabel(0.95, 0.95, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
+    axis(2, cex.axis=0.9, las=1)
+
+    abline(v=dLocFit$b1[dLocFit$Lz  == min(dLocFit$Lz)], col=c1, lty=1, lwd=1.5)
+    abline(v=dLocFit$b1[dLocFit$Leq == min(dLocFit$Leq)], col=c2, lty=2, lwd=1.5)
+    abline(v=dLocFit$b1[dLocFit$Lpc == min(dLocFit$Lpc)], col=c3, lty=3, lwd=1.5)
+    legend(
+          x       =  usr[2],
+          y       =  usr[4],
+          legend  =  c(expression(paste(italic(L[z]))),
+                      expression(paste(italic(L[eq]))),
+                      expression(paste(italic(L['%'])))),
+          lwd     =  1.5,
+          lty     =  c(1, 2, 3),
+          col     =  c(c1, c2, c3),
+          cex     =  1,
+          xjust   =  1,
+          yjust   =  1,
+          bty     =  'n',
+          border  =  NA
+    )
+
 
     # standardized residuals ~ x
-    par(mai=c(0.6732, 0.5412, 0.5412, 0.2772), cex=0.8)
     yRange  <-  max(abs(c(floor(min(resids)), ceiling(max(resids)))))
     yRange  <-  c(-1*yRange, yRange)
-    plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
+    plot(resids ~ x1, xlab='Predictor', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE, cex.lab=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
@@ -519,7 +529,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     lines(x1, lf1$fitted, col='tomato', lwd=2)
     
     # standardized residuals ~ fitted values
-    plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE)
+    plot(resids ~ yHat, xlab='Fitted Values', ylab='Std. residuals', xpd=NA, ylim=yRange, type='n', axes=FALSE, cex.lab=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
@@ -532,8 +542,25 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     lf2  <-  loess(resids ~ yHat)
     lines(yHat, lf2$fitted, col='tomato', lwd=2)
     
+    par(mai=c(0.8732, 0.5412, 0.6412, 0.2772))
+    #  overall regression plot
+    outy  <-  x$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
+    outx  <-  x$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
+    plot(x$yall ~ x$xall, axes=FALSE, type='n', xlab='Predictor', ylab='Response', cex.lab=1.2, ylim=c(min(x$yall), (max(x$yall) + 0.1*(max(x$yall) - min(x$yall)))))
+    usr  <-  par('usr')
+    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+    whiteGrid()
+    box()
+    axis(1, cex.axis=0.9)
+    axis(2, las=1, cex.axis=0.9)
+    points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
+    points(y1 ~ x1, col='dodgerblue', cex=1.2)
+    lines(x1, locFit$b0 + locFit$b1*x1, col='black', lty=2)
+    proportionalLabel(c(0, 0.14), rep(1.1, 2), text=FALSE, xpd=NA, type='l', lty=2)
+    proportionalLabel(0.15, 1.1, substitute(L[meth]~'Rank '*pos*': '*italic(y) == a~sy~b%.%italic(x), list(meth=x$method, pos=rank, a=rounded(locFit$b0, 2), sy=ifelse(b1 < 0, ' - ', ' + '), b=rounded(abs(b1), 4))), xpd=NA, adj=c(0, 0.5), cex=0.8)
+    proportionalLabel(0.95, 0.93, paste0('n = ', length(y1)), xpd=NA, adj=c(1, 0.5), font=3, col='dodgerblue')
+
     # qqnorm plot of standardized residuals
-    par(mai=c(0.9732, 0.5412, 0.2412, 0.2772), cex=0.8)
     qqPlot  <-  qqnorm(resids, main='QQNorm plot of Std. Residuals', xpd=NA, plot=FALSE)
     plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
     usr  <-  par('usr')
@@ -576,8 +603,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
 #' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
 #' outputRankLocRegPlot(allRegs)
 outputRankLocRegPlot  <-  function(allRegs) {
-    dev.new(width=7, height=7)
-    par(mfrow=c(5,5), omi=rep(1, 4), mai=rep(0,4), cex=1)
+    par(mfrow=c(5,5), omi=rep(1, 4), mai=rep(0,4))
     locFit  <-  allRegs$allRegs
 
     for(i in 1:25) {
@@ -603,65 +629,10 @@ outputRankLocRegPlot  <-  function(allRegs) {
         points(outy ~ outx, pch=16, col=transparentColor('black', 0.2), cex=1.2)
         points(y ~ x, col='dodgerblue', cex=0.8)
         lines(x, locFit$b0[i] + locFit$b1[i]*x, col='black', lwd=2, lty=2)
-        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 4))), adj=c(0, 0.5), cex=0.5)
+        proportionalLabel(0.03, 0.9, substitute(italic(z)*italic(y) == a~sy~b%.%italic(x), list(z=paste0(i, ';   '), a=rounded(locFit$b0[i], 2), sy=ifelse(locFit$b1[i] < 0, ' - ', ' + '), b=rounded(abs(locFit$b1[i]), 4))), adj=c(0, 0.5), cex=0.7)
     }
     mtext('Response', side=2, line=2.5, outer=TRUE)
     mtext('Predictor', side=1, line=2.5, outer=TRUE)
-}
-
-#' Distribution of all local slopes.
-#'
-#' @title Distribution of all local slopes
-#' @param allRegs An object of class \code{rankLocReg}.
-#' @details Generates a distribution of all local regression slopes.
-#' @seealso \code{\link{rankLocReg.default}}
-#' @author Colin Olito and Diego Barneche.
-#' @export
-#' @examples
-#' # load sea urchin respirometry data
-#' data(UrchinData)
-#' # rank L metric by method 'eq'
-#' allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, method="eq", verbose=TRUE)
-#' plotBeta1(allRegs)
-plotBeta1 <- function(allRegs) {
-
-    c1  <-  'tomato'
-    c2  <-  'darkolivegreen'
-    c3  <-  'dodgerblue4'
-    
-    dev.new(width=7, height=7)
-    par(omi=rep(0.5, 4), cex=1)
-    locFit     <-  allRegs$allRegs
-    b1Density  <-  density(locFit$b1)
-
-    plot(NA, xlab=expression(paste(beta[1])), type='n', axes=FALSE, ylab='Density', cex.lab=1.2, xlim=range(b1Density$x), ylim=c(0, (max(b1Density$y)+0.05*max(b1Density$y))), yaxs='i')
-    proportionalLabel(0.5, 1.1, expression(paste('Distribution of ', beta[1])), xpd=NA, adj=c(0.5, 0.5), font=3, cex=2)
-    usr  <-  par('usr')
-    rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-    whiteGrid()
-    box()
-    polygon(c(b1Density$x), c(b1Density$y), col=transparentColor('dodgerblue2', 0.5), border='dodgerblue2')
-    axis(1)
-    axis(2, las=1)
-
-    abline(v=locFit$b1[locFit$Lz  == min(locFit$Lz)], col=c1, lty=1, lwd=3)
-    abline(v=locFit$b1[locFit$Leq == min(locFit$Leq)], col=c2, lty=2, lwd=3)
-    abline(v=locFit$b1[locFit$Lpc == min(locFit$Lpc)], col=c3, lty=3, lwd=3)
-    legend(
-          x       =  usr[2],
-          y       =  usr[4],
-          legend  =  c(expression(paste(italic(L[z]))),
-                      expression(paste(italic(L[eq]))),
-                      expression(paste(italic(L['%'])))),
-          lwd     =  4,
-          lty     =  c(1, 2, 3),
-          col     =  c(c1, c2, c3),
-          cex     =  1,
-          xjust   =  1,
-          yjust   =  1,
-          bty     =  'n',
-          border  =  NA
-    )
 }
 
 #' Creates transparent colours

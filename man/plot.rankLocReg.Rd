@@ -14,7 +14,7 @@
 \item{rank}{Position, as in row number from input \code{x}, of local regression to be plotted.}
 }
 \value{
-Generates a scatterplot + residual-plot diagnostics for chosen local regression.
+Generates a distribution of all local regression slopes + residual-plot diagnostics for chosen local regression + scatterplot.
 }
 \description{
 Plotting chosen local linear regression.

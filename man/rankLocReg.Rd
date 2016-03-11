@@ -32,7 +32,7 @@ according to the combined linearity metric $L$. $L$ quantifies linearity from 1)
 residuals (a modified Breusch-Godfrey $R^2$). These three components of $L$ can be weighted in 3 different ways: unweighted (\code{method="z"}),
 equal weights (\code{method="eq"}), and percentile ranks (\code{method="pc"}). If method is unspecified, default to \code{z}.
 For highly skewed, or otherwise ill-behaved data we strongly advise examining the relative behaviour of the different weighting
-methods using \code{\link{plotBeta1}}.
+methods using \code{\link{plot.rankLocReg}}.
 
 For data sets with greater tha ~500 observations, we suggest thinning the number of observations using \code{\link{thinData}},
 given that this does not compromise the resolution of the data for the question of interest.
@@ -47,6 +47,6 @@ allRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.3, meth
 Colin Olito and Diego Barneche.
 }
 \seealso{
-\code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plotBeta1}}.
+\code{\link{locReg}}, \code{\link{thinData}}, \code{\link{plot.rankLocReg}}.
 }
 
