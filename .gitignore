@@ -89,4 +89,6 @@ LoLinR.Rcheck/
 LoLinR*tar.gz
 inst/doc
 inst/web
-vignettes/LoLinR.R
+vignettes/
+!vignettes/LoLinR.Rmd
+
