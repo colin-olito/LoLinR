@@ -562,7 +562,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
 
     # qqnorm plot of standardized residuals
     qqPlot  <-  qqnorm(resids, main='QQNorm plot of Std. Residuals', xpd=NA, plot=FALSE)
-    plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE)
+    plot(y1 ~ x1, data=qqPlot, xlab='Theoretical quantiles', ylab='Sample quantiles', xpd=NA, ylim=yRange, xlim=yRange, type='n', axes=FALSE, cex.lab=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
@@ -574,7 +574,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     
     # histogram of standardized residuals
     histPlot  <-  hist(resids, breaks=20, plot=FALSE)
-    plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE)
+    plot(NA, xlab='Std. Residuals', ylab='Density', xpd=NA, ylim=c(0, max(histPlot$density)), xlim=yRange, type='n', axes=FALSE, cex.lab=1.2)
     usr  <-  par('usr')
     rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
     whiteGrid()
