@@ -9,11 +9,18 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
-In this `html_vignette`, we introduce the `LoLinR` package, which provides tools to implement local linear regression techniques for estimating monotonic biological rates from time-series or trace data in a statistically robust and reproducible fashion. The methods are a modification of traditional Loess regression techniques built around the wrapper function `rankLocReg()`. 
 
 **1. Motivation**  
 
-Extract from the paper. Colin's newest change.
+Addressing many fundamental questions in biology begins with estimating the rate(s) of underlying biological processes. Although these rates are generally non-linear functions of a variety of state variables, biological research questions often focus on a putatively linear rate that must be estimated reliably, and without artefactual nonlinearies. Across many research disciplines in the biological sciences, ranging from  physiology, to community ecology, to biogeochemistry, biological rates are routinely estimated from noisy, non-linear time series using simple linear regression techniques and manual truncation of nonlinear regions of the data. Further, published studies rarely provide both the raw data and estimation methods necessary to reproduce results, making it difficult to evaluate or reproduce findings from raw data to published result.
+
+In this `html_vignette`, we introduce the `LoLinR` package, which provides tools to implement local linear regression techniques for estimating monotonic biological rates from time-series or trace data in a statistically robust and reproducible fashion. The methods are a modification of traditional Loess regression techniques built around the wrapper function `rankLocReg()`. We walk through several example analyses to illustrate the use and utility of the package, as well as highlight potential analytical pitfalls. 
+
+*For a full detailed description of the methods and additional example analyses, please have a look at the methods paper describing the package at http://link-to-publisher-webpage.com*.
+
+
+
+>>>>>>> prettied up html vignette
 
 **2. Sea urchin data**  
 
@@ -34,30 +41,48 @@ axis(1)
 axis(2, las=1)
 ```
   
-The full data set is clearly non-linear. As is typical of closed-chamber respirometry data, the initial 20 min of the data are messy, as the animal is stressed from handling, and the chamber equilibrates. There is also a more subtle acceleration in the rate of *O~2~* consumption towards the end of the time series as the animal exhibits a physiological response to declining *O~2~* avaiability in the chamber. While a non-linear statistical model could conceivably be fit to these data, the question of interest requires an estimate of a simple monotonic rate. Although estimating a simple monotonic rate from these data appears to be straightforward, it is actually a non-trivial challenge. On one hand, any estimate that includes the non-linear portions of the data is not actually an estimate of the rate of interest, as it includes physiological responses to stress and declining oxygen availability. On the other hand, truncating the data to exclude the non-linear parts is subjective, can sacrifice statistical power by excluding good data, and may be arbitrary, not reproducible, or both. Ultimately, we are interested in the region where the rate of *O~2~* consumption is most stable, which in theory should represent the resting metabolic rate. Using \pkg{LoLinR}, we can do this using the \code{rankLocReg} function.
+The full data set is clearly non-linear. The initial 20 min of the data are messy because the animal is stressed from handling, and the (closed respiration) chamber is still equilibrating after setup. There is also a more subtle acceleration in the rate of *O~2~* consumption towards the end of the time series as the animal exhibits a physiological response to declining *O~2~* avaiability in the chamber. While a non-linear statistical model could conceivably be fit to these data, the question of interest requires an estimate of a simple monotonic rate. Although estimating a simple monotonic rate from these data appears to be straightforward, it is actually a non-trivial challenge. On one hand, any estimate that includes the non-linear portions of the data is not actually an estimate of the rate of interest, as it includes equipment equilibration, as well as physiological responses to stress and declining oxygen availability. On the other hand, manually truncating the data to exclude the non-linear parts is subjective, can sacrifice statistical power by excluding good data, and may be arbitrary, not reproducible, or both. Ultimately, we are interested in the region where the rate of *O~2~* consumption is most stable, which in theory should represent the resting metabolic rate. Using \pkg{LoLinR}, we can do this using the \code{rankLocReg} function.
 
 ```{r}
 urchinRegs  <-  rankLocReg(xall=UrchinData$time, yall=UrchinData$D, alpha=0.2, 
     method="eq", verbose=TRUE)  
 ```
 
-The main function `rankLocReg` runs all possible local regressions (on adjacent data points) with minimum window size `alpha`. It chooses one of three methods/metrics (`z`, `eq` or `pc` -- default to `z`, see below for explanation of each method) to rank the best local regression. It outputs an object of class `rankLocReg`  
+The main wrapper function `rankLocReg` runs all possible local regressions (on adjacent data points) with minimum window size `alpha` (where `alpha` represents the proportion of the full data). The user chooses one of three methods/metrics to quantify linearity for each local regression (`z`, `eq` or `pc` -- default to `z`, see below for explanation of each method), and ranks all local regressions according the chosen metric. 
 
-*Explain different methods*
+*Linearity Metrics*
+Please see the methods paper [here](http://link-to-publisher-webpage.com) for a detailed description of the linearity metrics. Briefly, all three $L$ (linearity) metrics are themselves the sum of three component metrics which are calculated for each local regression. The component metrics are 1) Skewness of the standardized residuals, 2) autocorrelation of the standardized residuals, as estimated by a modified Breusch-Godfey statistic $R^2_{BG}$, and 3) the range of the 95% C.I. for the regression coefficient $\beta_1$. The main difference between the three $L$ metrics is how the component metrics are weighted. $L_Z$ represents the sum of the minimum of the $Z$-transformed component metrics. Thus, $L_Z$ implicitly weights each component metrics by their empirical variances. $L_{eq}$ weights each component metric equally. $L_{\%}$ sums the percentile-ranks of the minimum $Z$ scores for each metric. Ultimately, the choice of $L$ metrics will depend on the biology of the system being studies, the characteristics of the specific data set being analyzed, and the `alpha` value passed to `rankLocReg`. However, due to common heteroscedasticity among the component metrics, we strongly recommend the use of $L_{eq}$ and $L_{\%}$, and urge users even more strongly to carefully examine results from alternative $L$ metrics using the `reRank` function.
+
+`rankLocReg` outputs an object of class `rankLocReg`, which includes a list of 6 items: 
+
+* `nFits` - the number of local regression that were fitted to the data
+* `allRegs` - a data frame with fit and ranking data for all local regressions fit to the data
+* `xall` - the raw data for the independent variable
+* `yall` - the raw data for the dependent variable
+* `call` - a summary of the call to `rankLocReg`
+* `method` - the ranking method used
+
+Several standard diagnostic functions exist for `rankLocReg` objects, including `summary` and `plot`. 
 
 ```{r}
 summary(urchinRegs)
 ```
 
-*Explain what each output is here*
+A `summary` of a `rankLocReg` object provides: 
 
-Plot output for object of class `rankLocReg`, using the best local regression (according to method `eq`):  
+* a summary of the call
+* the number of local regressions that were fitted to the data
+* standard summary statistics of the raw data set 
+* a data frame witht he top 6 ranked regressions according to the chosen $L$ metric
+* a data frame with the number 1 ranked regression for each of the three $L$ metrics.
+
+`plot` output for object of class `rankLocReg`, using the best local regression (according to method `eq`):  
 
 ```{r, fig.width=7, fig.height=7}
 plot(urchinRegs, rank=1)
 ```
 
-Notice that the first plot provides the estimated slope for the best local regression for each of the ranking methods benchmarked against a distribution of all estimated slopes. One can also inspect the best 25 local regressions following the chosen method  
+Notice that the first plot provides the empirical distribution of $\beta_1$ for each local regression, with benchmarks for the number 1 ranked local regression for each of the three $L$ ranking methods. One can also inspect the best 25 local regressions following the chosen method  
 
 ```{r, fig.width=7, fig.height=7}
 outputRankLocRegPlot(urchinRegs)
@@ -65,11 +90,9 @@ outputRankLocRegPlot(urchinRegs)
 
 **3. O~2~ consumption in cormorant**  
 
-We now show a different utility using a dataset containing O~2~ consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486.  
+We now show a different utility using a dataset containing O~2~ consumption data for a Great cormorant. This dataset represents a small example of data used for analyses described in White et al. 2011. Metabolic rate throughout the annual cycle reveals the demands of an Arctic existence in Great Cormorants. Ecology 92: 475--486. In contrast to the previous example, this data set is a time series of the rate of O$_2$ consumption (\.$VO_2$ in mL O$_2~kg^{-1}~min^{-1}$) rather than O$_2$ saturation or concentration data. For this flow-through respirometry data, the question of interest is to estimate resting metabolic rate -- or the region of the time series where \.VO$_2$ was lowest, and most stable.
 
-Here we thin this dataset to speed up computation time using the package function `thinData`. *Explain the rationale better*.
-
-*Describe why this flow-through dataset is different*. Using method `eq`:
+This data set has a relatively large number of observations. Currently, a call to `LoLinR` using a data set with $N \approx 500$ observations will take a few minutes to run, and computation time increases exponentially with larger $N$. So before calling `rankLocReg`, we thin this dataset to $\frac{1}{3} \times N$ using the package function `thinData` in order to shorten computation time. This level of thinning does not alter any important features of the full time series for this data set. However, users should always check to see how thinning changes any data set before proceeding with an analysis.
 
 ```{r}
 data(CormorantData)
@@ -90,3 +113,27 @@ So we can easily re-sort the output `data.frame` of local regressions using meth
 cormRegs  <-  reRank(cormRegs, newMethod='pc')
 plot(cormRegs, rank=1)
 ```
+
+Since this is a time series of \.$VO_2$, our interest focuses on the average of the points included in the most stable region of the time series identified by `rankLocReg`. This can be accomplished easily by examining the `Lbound` and `Rbound` items for the best ranked regression, and subsetting the original \.$VO_2$ data using the associated data window. 
+
+```{r}
+summary(cormRegs)$summaryTable[1,]
+lB  <-  summary(cormRegs)$summaryTable$Lbound[1]
+rB  <-  summary(cormRegs)$summaryTable$Rbound[1]
+mean(CormorantData$VO2.ml.min[lB:rB])
+```
+
+
+
+**3. Facilitating objective and reproducible research**  
+
+The primary value of `LoLinR` (in our eyes) is that it provides an objective and transparent analytic toolkit for performing what is usually a relatively simple (but often methodologically opaque) first step in many research projects in the biological sciences. Importantly, readers can reproduce any `LoLinR` analysis if they have 
+
+1. the raw time series data, and 
+2. any one of the following data/output: 
+    + `alpha` *OR*
+    + `LoLinR` output plots *OR*
+    + `LoLinR` summaries *OR*
+    + full R code for the analyses being reproduced
+
+Any of these pieces of information is easy to save and include as appendices in published studies -- there is no reason that any `LoLinR` analysis should not be fully reproducible.

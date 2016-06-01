@@ -543,6 +543,7 @@ plot.rankLocReg  <-  function(x, ..., rank=1) {
     lines(yHat, lf2$fitted, col='tomato', lwd=2)
     
     par(mai=c(0.8732, 0.5412, 0.6412, 0.2772))
+    
     #  overall regression plot
     outy  <-  x$yall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
     outx  <-  x$xall[c(1:(bestwin[1]-1), (bestwin[2]+1):length(x$yall))]
