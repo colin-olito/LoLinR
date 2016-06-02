@@ -19,9 +19,6 @@ In this `html_vignette`, we introduce the `LoLinR` package, which provides tools
 *For a full detailed description of the methods and additional example analyses, please have a look at the methods paper describing the package at http://link-to-publisher-webpage.com*.
 
 
-
->>>>>>> prettied up html vignette
-
 **2. Sea urchin data**  
 
 We here use respiration data from the sea urchin *Heliocidaris erythrogramma*, common to Port Phillip Bay, Melbourne, Australia. The data are *O~2~* consumption time-series for 4 individual urchins included in a respirometry study (Colin Olito *unpublished data*). For this example, the biological question of interest has to do with estimating resting metabolic rate for each individual from their *O~2~* consumption time series. The variable include Time (*min*), and *mL O~2~* data for each individual (coded by the letters A-D). After loading the \code{UrchinData} data set, examination of the time series for individual 'D' gives a representative example of the analytical challenge presented by these data.
