@@ -6,7 +6,7 @@
 
 We introduce the `LoLinR` package, which provides tools to implement local linear regression techniques for estimating monotonic rates from time-series or trace data in a statistically robust and reproducible fashion. The methods are a modification of traditional Loess regression techniques built around the wrapper function `rankLocReg()`. 
 
-See the package documentation for `LoLinR` through our [online](https://colin-olito.github.io/LoLinR/vignettes/LoLinR.html) `html_vignette`. 
+See the package documentation for `LoLinR` through our [online](https://colin-olito.github.io/LoLinR/vignettes/LoLinR.html) `html_vignette`. You can also find the final version of the peer reviewed article describing the methods [here](http://jeb.biologists.org/content/early/2016/12/27/jeb.148775).
 
 ## Citing `LoLinR`
 
