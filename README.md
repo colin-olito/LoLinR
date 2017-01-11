@@ -10,8 +10,9 @@ See the package documentation for `LoLinR` through our [online](https://colin-ol
 
 ## Citing `LoLinR`
 
-A full description of the methods will also become available in the form of a scientific methods journal article. Citing information will become available once the manuscript has successfully passed through the peer review process. 
+When using `LoLinR` for research, please cite
 
+Olito, C., C.~R. White, D.~J. Marshall, and D.~R. Barneche. 2017. Estimating monotonic rates from biological data using local linear regression. Journal of Experimental Biology. DOI: 10.1242/jeb.148775.
 
 ## Installation
 
